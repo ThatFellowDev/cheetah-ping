@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm create:*)",
+      "Bash(npm -v)",
+      "Bash(where pnpm:*)",
+      "Bash(export PATH=\"$PATH:/c/Users/gerrr/AppData/Roaming/npm\")",
+      "Bash(pnpm --version)",
+      "Read(//c/Users/gerrr/Desktop/**)",
+      "Bash(cp -r cheetah-ping-temp/* cheetah-ping/)",
+      "Bash(cp -r cheetah-ping-temp/.gitignore cheetah-ping/)",
+      "Bash(cp -r cheetah-ping-temp/.git cheetah-ping/)",
+      "Bash(cp cheetah-ping-temp/next-env.d.ts cheetah-ping/)",
+      "Bash(cp cheetah-ping-temp/tsconfig.json cheetah-ping/)",
+      "Bash(cp cheetah-ping-temp/package.json cheetah-ping/)",
+      "Bash(cp cheetah-ping-temp/pnpm-lock.yaml cheetah-ping/)",
+      "Bash(cp cheetah-ping-temp/pnpm-workspace.yaml cheetah-ping/)",
+      "Bash(cp cheetah-ping-temp/postcss.config.mjs cheetah-ping/)",
+      "Bash(cp cheetah-ping-temp/.gitignore cheetah-ping/)",
+      "Bash(pnpm install:*)",
+      "Bash(CI=true pnpm install)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm dlx:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\gerrr\\Desktop\\cheetah-ping\\.claude"
+    ]
+  }
+}
