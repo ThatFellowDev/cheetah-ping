@@ -1,0 +1,20 @@
+{
+  "name": "cheetah-ping-monitor",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "diff": "^8.0.4",
+    "postgres": "^3.4.8",
+    "resend": "^6.10.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260405.1",
+    "@types/diff": "^8.0.0",
+    "typescript": "^5.0.0",
+    "wrangler": "^4.0.0"
+  }
+}
