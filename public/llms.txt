@@ -1,0 +1,39 @@
+# Cheetah Ping
+
+> Website change monitoring service. Monitor any webpage and get alerted the moment something changes.
+
+## What is Cheetah Ping?
+
+Cheetah Ping is a consumer-focused website change monitor. Users paste a URL, choose what to watch (whole page, specific section, or a keyword), and get email/Slack/Discord alerts when something changes. Checks run as frequently as every minute.
+
+## Use Cases
+
+- Job seekers: Get alerted when new roles are posted on career pages
+- Apartment hunters: Know the moment a new listing appears
+- Restock tracking: Get notified when sold-out products come back in stock
+- Price monitoring: Track price changes on any product page
+- Visa/appointment slots: Get alerted when appointment slots open up
+
+## Key Features
+
+- AI-powered URL analysis (auto-detects what to monitor)
+- AI change summaries (plain-English descriptions of what changed)
+- Checks as fast as every 60 seconds
+- Email, Slack, and Discord notifications
+- CSS selector targeting (monitor specific page sections)
+- Keyword monitoring (alert when a word appears or disappears)
+
+## Pricing
+
+- Free: 5 monitors, checks every 24 hours
+- Starter ($9/mo): 10 monitors, checks every 15 minutes
+- Pro ($19/mo): 50 monitors, checks every 5 minutes
+- Ultra ($49/mo): 25 monitors, checks every minute
+
+## Links
+
+- Homepage: https://cheetahping.com
+- Pricing: https://cheetahping.com/#pricing
+- Login: https://cheetahping.com/login
+- Privacy Policy: https://cheetahping.com/privacy
+- Terms of Service: https://cheetahping.com/terms

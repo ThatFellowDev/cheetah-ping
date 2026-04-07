@@ -1,0 +1,15 @@
+name = "cheetah-ping-monitor"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+crons = ["* * * * *"]
+
+[vars]
+APP_URL = "http://localhost:3000"
+
+# Secrets (set via: wrangler secret put DATABASE_URL, etc.)
+# DATABASE_URL
+# RESEND_API_KEY
+# GROQ_API_KEY
