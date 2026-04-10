@@ -31,7 +31,7 @@ export async function sendEmail({
   }
 
   await client.emails.send({
-    from: 'Cheetah Ping <noreply@updates.cheetahping.com>',
+    from: 'Cheetah Ping <noreply@notify.cheetahping.com>',
     to,
     subject,
     html,

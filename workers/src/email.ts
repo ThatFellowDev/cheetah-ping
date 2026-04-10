@@ -11,7 +11,7 @@ export async function sendEmail(
 
   const resend = new Resend(resendKey);
   await resend.emails.send({
-    from: 'Cheetah Ping <noreply@updates.cheetahping.com>',
+    from: 'Cheetah Ping <noreply@notify.cheetahping.com>',
     to,
     subject,
     html,
