@@ -24,6 +24,8 @@ import {
   Check,
   X,
   Crosshair,
+  Share2,
+  Copy,
 } from 'lucide-react';
 import { FREQUENCY_OPTIONS } from '@/lib/plan-limits';
 import { SelectorPreviewPanel } from '../new/components/selector-preview-panel';
@@ -41,6 +43,7 @@ interface Monitor {
   lastSnapshot: string | null;
   errorMessage: string | null;
   consecutiveErrors: number;
+  shareEnabled: boolean;
   createdAt: Date;
 }
 
@@ -51,6 +54,7 @@ interface Change {
   aiSummary: string | null;
   previousSnapshot: string | null;
   newSnapshot: string | null;
+  shareToken: string | null;
 }
 
 function formatDate(date: Date | null) {
@@ -338,6 +342,37 @@ export function MonitorDetail({
             </div>
           )}
           <Separator />
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground flex items-center gap-1.5">
+              <Share2 className="h-3.5 w-3.5" />
+              Shareable links
+            </span>
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const res = await fetch(`/api/monitors/${monitor.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ shareEnabled: !monitor.shareEnabled }),
+                  });
+                  if (!res.ok) throw new Error();
+                  toast.success(monitor.shareEnabled ? 'Sharing disabled' : 'Sharing enabled');
+                  router.refresh();
+                } catch {
+                  toast.error('Failed to update sharing');
+                }
+              }}
+              className={`text-xs px-2.5 py-1 rounded-full transition-all ${
+                monitor.shareEnabled
+                  ? 'bg-primary/20 text-primary'
+                  : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {monitor.shareEnabled ? 'On' : 'Off'}
+            </button>
+          </div>
+          <Separator />
           <div className="flex justify-between">
             <span className="text-muted-foreground">Last checked</span>
             <span>{formatDate(monitor.lastCheckedAt)}</span>
@@ -355,10 +390,45 @@ export function MonitorDetail({
         </CardHeader>
         <CardContent>
           {changes.length === 0 ? (
-            <EmptyState
-              title="No changes detected yet"
-              description="We'll show changes here as they're detected. Check back after the next monitoring cycle."
-            />
+            <div className="py-8 space-y-6">
+              <div className="flex items-start gap-4 max-w-sm mx-auto">
+                <div className="flex flex-col items-center gap-1">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                    monitor.lastCheckedAt ? 'bg-green-500/20 text-green-400' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {monitor.lastCheckedAt ? <Check className="h-4 w-4" /> : '1'}
+                  </div>
+                  <div className="w-px h-6 bg-white/10" />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-amber-500/20">
+                    <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+                  </div>
+                  <div className="w-px h-6 bg-white/10" />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted text-muted-foreground text-xs font-bold">
+                    3
+                  </div>
+                </div>
+                <div className="space-y-5 pt-1">
+                  <div>
+                    <p className={`text-sm font-medium ${monitor.lastCheckedAt ? 'text-green-400' : 'text-muted-foreground'}`}>
+                      {monitor.lastCheckedAt ? 'First check complete' : 'Waiting for first check'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {monitor.lastCheckedAt ? 'Page snapshot captured' : 'Starting soon...'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-amber-400">Watching for changes...</p>
+                    <p className="text-xs text-muted-foreground">
+                      Checking {formatFrequency(monitor.checkIntervalMinutes).toLowerCase()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">You'll be notified</p>
+                    <p className="text-xs text-muted-foreground">Via email the moment something changes</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="space-y-4">
               {changes.map((change) => (
@@ -367,6 +437,20 @@ export function MonitorDetail({
                     <span className="text-xs text-muted-foreground">
                       {formatDate(change.detectedAt)}
                     </span>
+                    {monitor.shareEnabled && change.shareToken && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const shareUrl = `${window.location.origin}/changes/${change.shareToken}`;
+                          navigator.clipboard.writeText(shareUrl);
+                          toast.success('Share link copied!');
+                        }}
+                        className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Copy className="h-3 w-3" />
+                        Share
+                      </button>
+                    )}
                   </div>
                   {change.aiSummary && (
                     <p className="text-sm font-medium">{change.aiSummary}</p>

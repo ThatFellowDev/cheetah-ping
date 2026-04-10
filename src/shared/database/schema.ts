@@ -25,6 +25,7 @@ export const user = pgTable('user', {
   slackWebhookUrl: text('slack_webhook_url'),
   discordWebhookUrl: text('discord_webhook_url'),
   isAdmin: boolean('is_admin').default(false).notNull(),
+  referredBy: text('referred_by'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (t) => [
@@ -88,6 +89,7 @@ export const monitors = pgTable('monitors', {
   status: text('status').default('active').notNull(), // active | paused | error
   errorMessage: text('error_message'),
   consecutiveErrors: integer('consecutive_errors').default(0).notNull(),
+  shareEnabled: boolean('share_enabled').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (t) => [
   index('monitor_user_status_idx').on(t.userId, t.status),
@@ -104,6 +106,7 @@ export const changeLog = pgTable('change_log', {
   previousSnapshot: text('previous_snapshot'),
   newSnapshot: text('new_snapshot'),
   notified: boolean('notified').default(false).notNull(),
+  shareToken: text('share_token').$defaultFn(() => createId()),
 }, (t) => [
   index('changelog_monitor_time_idx').on(t.monitorId, t.detectedAt),
 ]);

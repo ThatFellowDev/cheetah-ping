@@ -35,6 +35,7 @@ interface Monitor {
   status: string;
   error_message: string | null;
   consecutive_errors: number;
+  share_enabled: boolean;
   user_email: string;
   slack_webhook_url: string | null;
   discord_webhook_url: string | null;
@@ -81,6 +82,7 @@ async function checkDueMonitors(sql: postgres.Sql, env: Env) {
       m.status,
       m.error_message,
       m.consecutive_errors,
+      m.share_enabled,
       u.email AS user_email,
       u.slack_webhook_url,
       u.discord_webhook_url
@@ -157,8 +159,9 @@ async function checkMonitor(sql: postgres.Sql, env: Env, monitor: Monitor) {
 
     const displaySummary = aiSummary || summary;
 
+    const shareToken = crypto.randomUUID();
     await sql`
-      INSERT INTO change_log (id, monitor_id, diff_summary, ai_summary, previous_snapshot, new_snapshot, notified)
+      INSERT INTO change_log (id, monitor_id, diff_summary, ai_summary, previous_snapshot, new_snapshot, notified, share_token)
       VALUES (
         gen_random_uuid(),
         ${monitor.id},
@@ -166,12 +169,14 @@ async function checkMonitor(sql: postgres.Sql, env: Env, monitor: Monitor) {
         ${aiSummary},
         ${monitor.last_snapshot?.slice(0, MAX_SNAPSHOT_SIZE) || null},
         ${truncated},
-        true
+        true,
+        ${shareToken}
       )
     `;
 
     const label = monitor.label || monitor.url;
     const historyUrl = `${env.APP_URL}/monitors/${monitor.id}`;
+    const shareUrl = `${env.APP_URL}/changes/${shareToken}`;
 
     // Email alert
     await sendEmail(env.RESEND_API_KEY, {
@@ -192,6 +197,14 @@ async function checkMonitor(sql: postgres.Sql, env: Env, monitor: Monitor) {
            |
           <a href="${env.APP_URL}/api/monitors/${monitor.id}/pause">Pause this monitor</a>
         </p>
+        ${monitor.share_enabled ? `
+        <p style="margin-top:20px;padding-top:16px;border-top:1px solid #eee;color:#999;font-size:12px;">
+          <a href="${shareUrl}" style="color:#666;">Share this change</a>
+          &nbsp;|&nbsp;
+          Know someone who'd love this?
+          <a href="${env.APP_URL}/login?ref=${monitor.user_id}" style="color:#666;">Invite them to Cheetah Ping</a>
+        </p>
+        ` : ''}
       `,
     });
 
