@@ -2,11 +2,11 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/shared/database/db';
 import { monitors } from '@/shared/database/schema';
 import { requireAuth } from '@/lib/require-auth';
-import { PLAN_LIMITS } from '@/lib/plan-limits';
+import { PLAN_LIMITS, PLAN_DISPLAY } from '@/lib/plan-limits';
 import { PlanLimitBar } from '@/shared/components/plan-limit-bar';
-import { EmptyState } from '@/shared/components/empty-state';
 import { LinkButton } from '@/shared/components/link-button';
 import { MonitorList } from './monitor-list';
+import { OnboardingEmptyState } from './onboarding-empty-state';
 import { Plus } from 'lucide-react';
 
 export default async function DashboardPage() {
@@ -17,6 +17,10 @@ export default async function DashboardPage() {
     where: eq(monitors.userId, user.userId),
     orderBy: (m, { desc }) => [desc(m.createdAt)],
   });
+
+  if (userMonitors.length === 0) {
+    return <OnboardingEmptyState plan={user.plan} />;
+  }
 
   return (
     <div className="space-y-6">
@@ -33,16 +37,7 @@ export default async function DashboardPage() {
 
       <PlanLimitBar current={userMonitors.length} max={limits.maxMonitors} />
 
-      {userMonitors.length === 0 ? (
-        <EmptyState
-          title="No monitors yet"
-          description="Start watching a webpage for changes. You'll get an email alert the moment something changes."
-          actionLabel="Create your first monitor"
-          actionHref="/monitors/new"
-        />
-      ) : (
-        <MonitorList monitors={userMonitors} />
-      )}
+      <MonitorList monitors={userMonitors} />
     </div>
   );
 }
