@@ -11,7 +11,7 @@ import { authClient } from '@/modules/auth/auth-client';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { Mail, ArrowLeft } from 'lucide-react';
 
-const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+const TURNSTILE_SITE_KEY = process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY : undefined;
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -56,7 +56,18 @@ export default function LoginPage() {
     }
   }
 
+  function getEmailProviderUrl(addr: string) {
+    const domain = addr.split('@')[1]?.toLowerCase();
+    if (domain === 'gmail.com' || domain === 'googlemail.com') return { name: 'Open Gmail', url: 'https://mail.google.com' };
+    if (domain === 'outlook.com' || domain === 'hotmail.com' || domain === 'live.com') return { name: 'Open Outlook', url: 'https://outlook.live.com' };
+    if (domain === 'yahoo.com') return { name: 'Open Yahoo Mail', url: 'https://mail.yahoo.com' };
+    if (domain === 'protonmail.com' || domain === 'proton.me' || domain === 'pm.me') return { name: 'Open Proton Mail', url: 'https://mail.proton.me' };
+    if (domain === 'icloud.com' || domain === 'me.com' || domain === 'mac.com') return { name: 'Open iCloud Mail', url: 'https://www.icloud.com/mail' };
+    return null;
+  }
+
   if (sent) {
+    const provider = getEmailProviderUrl(email);
     return (
       <Card className="w-full max-w-md glass border-0 animate-fade-in-up overflow-visible">
         <CardContent className="pt-10 pb-10 px-8 text-center space-y-4">
@@ -68,6 +79,16 @@ export default function LoginPage() {
             We sent a login link to <strong className="text-foreground break-all">{email}</strong>.
             <br />Click it to sign in. It expires in 5 minutes.
           </p>
+          {provider && (
+            <a
+              href={provider.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
+            >
+              {provider.name}
+            </a>
+          )}
           <Button
             variant="ghost"
             onClick={() => {
