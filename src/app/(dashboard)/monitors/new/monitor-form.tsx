@@ -23,7 +23,8 @@ import {
   Building2,
   CalendarCheck,
   ExternalLink,
-  Sparkles,
+  Brain,
+  Radar,
   Eye,
   Shield,
   Bell,
@@ -46,22 +47,26 @@ interface AiSuggestion {
   keyword: string | null;
   selector: string | null;
   summary: string;
+  intentSummary: string;
+  alertExplanation: string;
+  suggestedFrequencyMinutes: number;
   confidence: 'ai' | 'basic';
   selectorSuggestions?: SelectorSuggestion[];
   pagePreview?: PagePreview;
+  contentPreview?: string;
 }
 
 const inspirations = [
-  { icon: Briefcase, label: 'Job postings', placeholder: 'https://company.com/careers' },
-  { icon: ShoppingCart, label: 'Restocks', placeholder: 'https://store.com/product' },
-  { icon: TrendingDown, label: 'Price drops', placeholder: 'https://store.com/product' },
-  { icon: Building2, label: 'Apartments', placeholder: 'https://apartments.com/listing' },
-  { icon: CalendarCheck, label: 'Appointments', placeholder: 'https://appointments.gov' },
-  { icon: Globe, label: 'News & blogs', placeholder: 'https://news.site.com' },
-  { icon: Eye, label: 'Competitors', placeholder: 'https://competitor.com/pricing' },
-  { icon: Shield, label: 'Government', placeholder: 'https://agency.gov/updates' },
-  { icon: Bell, label: 'Event tickets', placeholder: 'https://ticketsite.com/event' },
-  { icon: Hash, label: 'Social media', placeholder: 'https://twitter.com/username' },
+  { icon: Briefcase, label: 'Job postings', placeholder: 'https://company.com/careers', intent: 'Alert me when new jobs are posted' },
+  { icon: ShoppingCart, label: 'Restocks', placeholder: 'https://store.com/product', intent: 'Alert me when this is back in stock' },
+  { icon: TrendingDown, label: 'Price drops', placeholder: 'https://store.com/product', intent: 'Alert me when the price drops' },
+  { icon: Building2, label: 'Apartments', placeholder: 'https://apartments.com/listing', intent: 'Alert me when new listings appear' },
+  { icon: CalendarCheck, label: 'Appointments', placeholder: 'https://appointments.gov', intent: 'Alert me when appointment slots open' },
+  { icon: Globe, label: 'News & blogs', placeholder: 'https://news.site.com', intent: 'Alert me when new articles are published' },
+  { icon: Eye, label: 'Competitors', placeholder: 'https://competitor.com/pricing', intent: 'Alert me when their pricing changes' },
+  { icon: Shield, label: 'Government', placeholder: 'https://agency.gov/updates', intent: 'Alert me when this page is updated' },
+  { icon: Bell, label: 'Event tickets', placeholder: 'https://ticketsite.com/event', intent: 'Alert me when tickets become available' },
+  { icon: Hash, label: 'Social media', placeholder: 'https://twitter.com/username', intent: 'Alert me when new content is posted' },
 ];
 
 const watchModes = [
@@ -89,9 +94,12 @@ export function MonitorForm({ plan }: { plan: Plan }) {
   const router = useRouter();
   const [url, setUrl] = useState('');
   const [urlPlaceholder, setUrlPlaceholder] = useState('https://example.com');
+  const [intent, setIntent] = useState('');
+  const [intentPlaceholder, setIntentPlaceholder] = useState('e.g. "Alert me when the price drops"');
   const [suggestion, setSuggestion] = useState<AiSuggestion | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [showCustomize, setShowCustomize] = useState(false);
 
   const [label, setLabel] = useState('');
   const [watchMode, setWatchMode] = useState<'page' | 'selector' | 'keyword'>('page');
@@ -124,7 +132,7 @@ export function MonitorForm({ plan }: { plan: Plan }) {
       const res = await fetch('/api/monitors/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: cleanUrl }),
+        body: JSON.stringify({ url: cleanUrl, intent: intent.trim() || undefined }),
       });
 
       const result = await res.json();
@@ -139,7 +147,13 @@ export function MonitorForm({ plan }: { plan: Plan }) {
       setWatchMode(data.watchMode);
       setKeyword(data.keyword || '');
       setSelector(data.selector || '');
-      setFrequency(allowedFrequencies[0]?.value ?? 1440);
+      // Use AI-suggested frequency, clamped to plan minimum
+      const suggestedFreq = data.suggestedFrequencyMinutes || 60;
+      const clampedFreq = Math.max(suggestedFreq, limits.minIntervalMinutes);
+      const bestMatch = allowedFrequencies.reduce((prev, curr) =>
+        Math.abs(curr.value - clampedFreq) < Math.abs(prev.value - clampedFreq) ? curr : prev
+      );
+      setFrequency(bestMatch.value);
     } catch {
       toast.error('Something went wrong analyzing the page');
     } finally {
@@ -193,28 +207,50 @@ export function MonitorForm({ plan }: { plan: Plan }) {
 
   return (
     <div className="space-y-5">
-      {/* Suggestion chips */}
+      {/* Suggestion chips + try it example */}
       {!analyzed && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="space-y-2"
+          className="space-y-4"
         >
-          <p className="text-xs text-center text-muted-foreground">
-            Try watching for...
-          </p>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {inspirations.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() => setUrlPlaceholder(item.placeholder)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs glass border border-transparent hover:border-primary/30 transition-all text-muted-foreground hover:text-foreground"
-              >
-                <item.icon className="h-3 w-3 text-primary" />
-                {item.label}
-              </button>
-            ))}
+          {/* Try it example */}
+          <button
+            type="button"
+            onClick={() => {
+              setUrl('https://store.steampowered.com/app/1245620/ELDEN_RING/');
+              setIntent('Alert me when the price drops');
+              setIntentPlaceholder('Alert me when the price drops');
+            }}
+            className="w-full glass rounded-xl p-3 text-left border border-transparent hover:border-primary/30 transition-all group cursor-pointer"
+          >
+            <p className="text-[11px] text-primary font-medium mb-1">Try it — see how it works</p>
+            <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+              Watch <span className="font-mono text-foreground/70">store.steampowered.com/.../ELDEN_RING</span> for price drops
+            </p>
+          </button>
+
+          <div className="space-y-2">
+            <p className="text-xs text-center text-muted-foreground">
+              Or try watching for...
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {inspirations.map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => {
+                    setUrlPlaceholder(item.placeholder);
+                    setIntentPlaceholder(item.intent);
+                    setIntent(item.intent);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs glass border border-transparent hover:border-primary/30 transition-all text-muted-foreground hover:text-foreground"
+                >
+                  <item.icon className="h-3 w-3 text-primary" />
+                  {item.label}
+                </button>
+              ))}
+            </div>
           </div>
         </motion.div>
       )}
@@ -254,16 +290,32 @@ export function MonitorForm({ plan }: { plan: Plan }) {
             </div>
 
             {!analyzed && (
-              <GlowButton type="submit" className="w-full" disabled={analyzing || !url.trim()}>
-                {analyzing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Scanning page...
-                  </>
-                ) : (
-                  'Start watching'
-                )}
-              </GlowButton>
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="intent" className="text-sm text-muted-foreground flex items-center gap-1.5">
+                    <Brain className="h-3.5 w-3.5 text-primary" />
+                    AI intent — describe what you want to track <span className="text-muted-foreground/50">(optional)</span>
+                  </Label>
+                  <Input
+                    id="intent"
+                    placeholder={intentPlaceholder}
+                    value={intent}
+                    onChange={(e) => setIntent(e.target.value)}
+                    className="h-10"
+                    disabled={analyzing}
+                  />
+                </div>
+                <GlowButton type="submit" className="w-full" disabled={analyzing || !url.trim()}>
+                  {analyzing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Scanning page...
+                    </>
+                  ) : (
+                    'Start watching'
+                  )}
+                </GlowButton>
+              </>
             )}
           </form>
         </CardContent>
@@ -312,203 +364,101 @@ export function MonitorForm({ plan }: { plan: Plan }) {
                 </div>
                 {suggestion?.confidence === 'ai' && (
                   <div className="flex items-center gap-1 text-[10px] text-primary/70 shrink-0">
-                    <Sparkles className="h-3 w-3" />
+                    <Brain className="h-3 w-3" />
                     AI analyzed
                   </div>
                 )}
               </motion.div>
             )}
 
-            {/* AI summary */}
-            {suggestion?.summary && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.15 }}
-                className="text-sm text-muted-foreground text-center px-4"
-              >
-                {suggestion.summary}
-              </motion.p>
-            )}
-
-            {/* Watch mode selection — always prominent */}
+            {/* AI confidence statement */}
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="space-y-3"
+              transition={{ delay: 0.15 }}
+              className="glass rounded-xl p-4 space-y-2"
             >
-              <Label className="text-xs text-muted-foreground uppercase tracking-wider">
-                What to monitor
-              </Label>
-              <div className="grid grid-cols-3 gap-2">
-                {watchModes.map((mode) => {
-                  const isActive = watchMode === mode.id;
+              <div className="flex items-start gap-2">
+                <Radar className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                <p className="text-sm font-medium">{suggestion?.intentSummary}</p>
+              </div>
+              {suggestion?.alertExplanation && (
+                <p className="text-xs text-muted-foreground pl-6 leading-relaxed">
+                  {suggestion.alertExplanation}
+                </p>
+              )}
+            </motion.div>
+
+            {/* Content preview — what's being monitored */}
+            {suggestion?.contentPreview && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="space-y-1.5"
+              >
+                <p className="text-[11px] text-muted-foreground/60 uppercase tracking-wider">Monitoring this content</p>
+                <div className="bg-muted/20 rounded-lg p-3 text-xs text-muted-foreground font-mono leading-relaxed max-h-24 overflow-y-auto">
+                  {suggestion.contentPreview}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Frequency picker */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="space-y-2"
+            >
+              <Label className="text-xs text-muted-foreground">Check frequency</Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {FREQUENCY_OPTIONS.map((freq) => {
+                  const locked = freq.value < limits.minIntervalMinutes;
+                  const selected = (frequency || allowedFrequencies[0]?.value || 1440) === freq.value;
                   return (
                     <button
-                      key={mode.id}
+                      key={freq.value}
                       type="button"
-                      onClick={() => setWatchMode(mode.id)}
+                      onClick={() => {
+                        if (locked) {
+                          toast('Upgrade your plan for faster checks', {
+                            action: {
+                              label: 'Upgrade',
+                              onClick: () => router.push('/settings'),
+                            },
+                          });
+                        } else {
+                          setFrequency(freq.value);
+                        }
+                      }}
                       className={`
-                        relative flex flex-col items-center gap-2 p-4 rounded-xl text-center transition-all
-                        ${isActive
-                          ? 'glass glow-border border-primary/30'
-                          : 'border border-white/5 hover:border-white/15 hover:bg-white/5'
+                        relative px-3 py-2.5 rounded-xl text-sm text-center transition-all
+                        ${selected && !locked
+                          ? 'glass glow-border border-primary/30 text-foreground'
+                          : locked
+                            ? 'border border-white/5 opacity-40 cursor-not-allowed'
+                            : 'border border-white/5 hover:border-white/15 hover:bg-white/5 text-muted-foreground'
                         }
                       `}
                     >
-                      <mode.icon
-                        className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
-                      />
-                      <div>
-                        <span className={`text-sm font-medium block ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          {mode.title}
+                      {freq.label.replace('Every ', '')}
+                      {locked && (
+                        <span className="absolute -top-1.5 -right-1.5 text-[9px] text-primary-foreground font-medium px-1.5 py-0.5 rounded-full bg-primary">
+                          PRO
                         </span>
-                        <span className="text-[10px] text-muted-foreground/70 block mt-0.5">
-                          {mode.description}
-                        </span>
-                      </div>
-                      {isActive && (
-                        <motion.div
-                          layoutId="mode-check"
-                          className="absolute top-2 right-2"
-                        >
-                          <Check className="h-3.5 w-3.5 text-primary" />
-                        </motion.div>
                       )}
                     </button>
                   );
                 })}
               </div>
-
-              {/* Mode-specific configuration */}
-              <AnimatePresence mode="wait">
-                {watchMode === 'keyword' && (
-                  <motion.div
-                    key="keyword-config"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-2 pt-1">
-                      <Input
-                        value={keyword}
-                        onChange={(e) => setKeyword(e.target.value)}
-                        placeholder='e.g. "In Stock", "Available", "Open"'
-                      />
-                      <div className="flex items-start gap-2 text-xs text-muted-foreground p-2.5 rounded-lg bg-white/5">
-                        <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
-                        We'll alert you when this word appears or disappears. Not case-sensitive.
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {watchMode === 'selector' && (
-                  <motion.div
-                    key="selector-config"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-3 pt-1">
-                      {/* Visual element picker button */}
-                      <button
-                        type="button"
-                        onClick={() => setPickerOpen(true)}
-                        className="w-full flex items-center justify-center gap-2.5 p-3.5 rounded-xl border border-primary/20 hover:border-primary/40 bg-primary/5 hover:bg-primary/10 transition-all text-sm font-medium text-primary hover:shadow-[0_0_20px_oklch(0.78_0.16_75_/_15%)]"
-                      >
-                        <Crosshair className="h-4 w-4" />
-                        Pick element from page
-                      </button>
-
-                      {suggestion?.selectorSuggestions && suggestion.selectorSuggestions.length > 0 && (
-                        <SelectorSuggestions
-                          suggestions={suggestion.selectorSuggestions}
-                          onSelect={(sel) => setSelector(sel)}
-                          selectedSelector={selector}
-                        />
-                      )}
-                      <SelectorPreviewPanel
-                        url={url}
-                        value={selector}
-                        onChange={setSelector}
-                      />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </motion.div>
 
-            {/* Label + Frequency */}
+            {/* Create button — primary CTA */}
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="space-y-3"
-            >
-              <div className="space-y-2">
-                <Label htmlFor="label" className="text-xs text-muted-foreground">Label</Label>
-                <Input
-                  id="label"
-                  value={label}
-                  onChange={(e) => setLabel(e.target.value)}
-                  placeholder="My monitor"
-                  className="h-10"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Check frequency</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {FREQUENCY_OPTIONS.map((freq) => {
-                    const locked = freq.value < limits.minIntervalMinutes;
-                    const selected = (frequency || allowedFrequencies[0]?.value || 1440) === freq.value;
-                    return (
-                      <button
-                        key={freq.value}
-                        type="button"
-                        onClick={() => {
-                          if (locked) {
-                            toast('Upgrade your plan for faster checks', {
-                              action: {
-                                label: 'Upgrade',
-                                onClick: () => router.push('/settings'),
-                              },
-                            });
-                          } else {
-                            setFrequency(freq.value);
-                          }
-                        }}
-                        className={`
-                          relative px-3 py-2.5 rounded-xl text-sm text-center transition-all
-                          ${selected && !locked
-                            ? 'glass glow-border border-primary/30 text-foreground'
-                            : locked
-                              ? 'border border-white/5 opacity-40 cursor-not-allowed'
-                              : 'border border-white/5 hover:border-white/15 hover:bg-white/5 text-muted-foreground'
-                          }
-                        `}
-                      >
-                        {freq.label.replace('Every ', '')}
-                        {locked && (
-                          <span className="absolute -top-1.5 -right-1.5 text-[9px] text-primary-foreground font-medium px-1.5 py-0.5 rounded-full bg-primary">
-                            PRO
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Create button */}
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35 }}
             >
               <GlowButton className="w-full" onClick={handleCreate} disabled={creating}>
                 {creating ? (
@@ -520,6 +470,151 @@ export function MonitorForm({ plan }: { plan: Plan }) {
                   'Start monitoring'
                 )}
               </GlowButton>
+            </motion.div>
+
+            {/* Customize — expandable advanced options */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.35 }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowCustomize(!showCustomize)}
+                className="w-full text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors text-center py-1"
+              >
+                {showCustomize ? '— Hide advanced options' : '+ Customize watch mode, selector, label'}
+              </button>
+
+              <AnimatePresence>
+                {showCustomize && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="space-y-4 pt-3 border-t border-white/5 mt-3">
+                      {/* Watch mode selection */}
+                      <div className="space-y-3">
+                        <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                          What to monitor
+                        </Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {watchModes.map((mode) => {
+                            const isActive = watchMode === mode.id;
+                            return (
+                              <button
+                                key={mode.id}
+                                type="button"
+                                onClick={() => setWatchMode(mode.id)}
+                                className={`
+                                  relative flex flex-col items-center gap-2 p-4 rounded-xl text-center transition-all
+                                  ${isActive
+                                    ? 'glass glow-border border-primary/30'
+                                    : 'border border-white/5 hover:border-white/15 hover:bg-white/5'
+                                  }
+                                `}
+                              >
+                                <mode.icon
+                                  className={`h-5 w-5 ${isActive ? 'text-primary' : 'text-muted-foreground'}`}
+                                />
+                                <div>
+                                  <span className={`text-sm font-medium block ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                    {mode.title}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground/70 block mt-0.5">
+                                    {mode.description}
+                                  </span>
+                                </div>
+                                {isActive && (
+                                  <motion.div
+                                    layoutId="mode-check"
+                                    className="absolute top-2 right-2"
+                                  >
+                                    <Check className="h-3.5 w-3.5 text-primary" />
+                                  </motion.div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Mode-specific configuration */}
+                        <AnimatePresence mode="wait">
+                          {watchMode === 'keyword' && (
+                            <motion.div
+                              key="keyword-config"
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="space-y-2 pt-1">
+                                <Input
+                                  value={keyword}
+                                  onChange={(e) => setKeyword(e.target.value)}
+                                  placeholder='e.g. "In Stock", "Available", "Open"'
+                                />
+                                <div className="flex items-start gap-2 text-xs text-muted-foreground p-2.5 rounded-lg bg-white/5">
+                                  <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
+                                  We'll alert you when this word appears or disappears. Not case-sensitive.
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {watchMode === 'selector' && (
+                            <motion.div
+                              key="selector-config"
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="space-y-3 pt-1">
+                                <button
+                                  type="button"
+                                  onClick={() => setPickerOpen(true)}
+                                  className="w-full flex items-center justify-center gap-2.5 p-3.5 rounded-xl border border-primary/20 hover:border-primary/40 bg-primary/5 hover:bg-primary/10 transition-all text-sm font-medium text-primary hover:shadow-[0_0_20px_oklch(0.78_0.16_75_/_15%)]"
+                                >
+                                  <Crosshair className="h-4 w-4" />
+                                  Pick element from page
+                                </button>
+
+                                {suggestion?.selectorSuggestions && suggestion.selectorSuggestions.length > 0 && (
+                                  <SelectorSuggestions
+                                    suggestions={suggestion.selectorSuggestions}
+                                    onSelect={(sel) => setSelector(sel)}
+                                    selectedSelector={selector}
+                                  />
+                                )}
+                                <SelectorPreviewPanel
+                                  url={url}
+                                  value={selector}
+                                  onChange={setSelector}
+                                />
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* Label */}
+                      <div className="space-y-2">
+                        <Label htmlFor="label" className="text-xs text-muted-foreground">Label</Label>
+                        <Input
+                          id="label"
+                          value={label}
+                          onChange={(e) => setLabel(e.target.value)}
+                          placeholder="My monitor"
+                          className="h-10"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           </motion.div>
         )}

@@ -21,7 +21,9 @@ export const createMonitorSchema = z.object({
   checkIntervalMinutes: z.number().int().positive(),
 });
 
-export const updateMonitorSchema = createMonitorSchema.partial();
+export const updateMonitorSchema = createMonitorSchema.partial().extend({
+  shareEnabled: z.boolean().optional(),
+});
 
 export type CreateMonitorInput = z.infer<typeof createMonitorSchema>;
 export type UpdateMonitorInput = z.infer<typeof updateMonitorSchema>;

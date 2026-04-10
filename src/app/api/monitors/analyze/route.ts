@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { url } = await request.json();
+  const { url, intent } = await request.json();
   if (!url || typeof url !== 'string') {
     return NextResponse.json({ error: 'URL required' }, { status: 400 });
   }
@@ -93,6 +93,17 @@ export async function POST(request: NextRequest) {
     ogImage,
   };
 
+  // Extract content preview for what would be monitored
+  function getContentPreview(selectorStr?: string | null): string {
+    if (selectorStr) {
+      const el = $(selectorStr);
+      if (el.length > 0) {
+        return el.text().replace(/\s+/g, ' ').trim().slice(0, 300);
+      }
+    }
+    return bodyText.slice(0, 300);
+  }
+
   // If no Groq key, return basic analysis
   if (!process.env.GROQ_API_KEY) {
     return NextResponse.json({
@@ -102,9 +113,13 @@ export async function POST(request: NextRequest) {
         keyword: null,
         selector: null,
         summary: `We'll watch this page for any changes.`,
+        intentSummary: `We'll watch this page and alert you when anything changes.`,
+        alertExplanation: `You'll be notified when the visible content on this page changes. Minor formatting changes and timestamps are automatically filtered out.`,
+        suggestedFrequencyMinutes: 1440,
         confidence: 'basic',
         selectorSuggestions: [],
         pagePreview,
+        contentPreview: getContentPreview(null),
       },
     });
   }
@@ -117,20 +132,25 @@ export async function POST(request: NextRequest) {
     messages: [
       {
         role: 'system',
-        content: `You analyze webpages and suggest monitoring strategies. Given a URL, page content, and DOM structure hints, determine:
+        content: `You analyze webpages and suggest monitoring strategies. Given a URL, page content, DOM structure hints, and optionally the user's intent (what they want to watch for), determine:
 1. A short label for this monitor (max 60 chars)
 2. The best watch mode: "page" (whole page), "keyword" (watch for specific word), or "selector" (watch specific element)
 3. If keyword mode: suggest the keyword to watch for
 4. If selector mode: suggest a CSS selector (prefer IDs and data-attributes over deep chains)
-5. A one-sentence explanation of what you'd monitor and why
-6. Always provide 2-4 selectorSuggestions — different CSS selectors the user might want to monitor on this page. Each has: selector (CSS), label (short human name), rationale (one sentence why), robustness ("high" if uses ID/data-attr, "medium" if class-based, "low" if positional/deep chain).
+5. "summary": a one-sentence technical explanation
+6. "intentSummary": a consumer-friendly sentence like "We'll watch the product price and ping you when it drops" — speak directly to the user, be specific about what you'll monitor
+7. "alertExplanation": explain what WILL and WON'T trigger an alert, e.g. "You'll be notified when the price changes. Minor text updates elsewhere on the page won't trigger alerts because we're only watching the price element."
+8. "suggestedFrequencyMinutes": recommend a check frequency based on the use case (5 for prices/stock, 15 for job boards, 60 for news/blogs, 1440 for policy/legal pages)
+9. Always provide 2-4 selectorSuggestions — different CSS selectors the user might want to monitor. Each has: selector (CSS), label (short human name), rationale (one sentence why), robustness ("high" if uses ID/data-attr, "medium" if class-based, "low" if positional/deep chain).
+
+If the user provides intent, heavily weight your suggestions toward fulfilling that intent.
 
 Respond in JSON only:
-{"label":"...","watchMode":"page|keyword|selector","keyword":null,"selector":null,"summary":"...","selectorSuggestions":[{"selector":"...","label":"...","rationale":"...","robustness":"high|medium|low"}]}`,
+{"label":"...","watchMode":"page|keyword|selector","keyword":null,"selector":null,"summary":"...","intentSummary":"...","alertExplanation":"...","suggestedFrequencyMinutes":60,"selectorSuggestions":[{"selector":"...","label":"...","rationale":"...","robustness":"high|medium|low"}]}`,
       },
       {
         role: 'user',
-        content: `URL: ${url}\nPage title: ${pageTitle}\nDOM hints: ${domSummary || 'none'}\nPage content (first 3000 chars):\n${bodyText}`,
+        content: `URL: ${url}\nPage title: ${pageTitle}\n${intent ? `User intent: ${intent}\n` : ''}DOM hints: ${domSummary || 'none'}\nPage content (first 3000 chars):\n${bodyText}`,
       },
     ],
     temperature: 0.3,
@@ -147,11 +167,15 @@ Respond in JSON only:
         keyword: result.keyword || null,
         selector: result.selector || null,
         summary: result.summary || "We'll watch this page for changes.",
+        intentSummary: result.intentSummary || result.summary || "We'll watch this page and alert you when it changes.",
+        alertExplanation: result.alertExplanation || "You'll be notified when the visible content changes. Timestamps and minor formatting changes are automatically filtered out.",
+        suggestedFrequencyMinutes: result.suggestedFrequencyMinutes || 60,
         confidence: 'ai',
         selectorSuggestions: Array.isArray(result.selectorSuggestions)
           ? result.selectorSuggestions.slice(0, 5)
           : [],
         pagePreview,
+        contentPreview: getContentPreview(result.selector),
       },
     });
   } catch {
@@ -162,9 +186,13 @@ Respond in JSON only:
         keyword: null,
         selector: null,
         summary: "We'll watch this page for any changes.",
+        intentSummary: "We'll watch this page and alert you when anything changes.",
+        alertExplanation: "You'll be notified when the visible content changes. Timestamps and minor formatting changes are automatically filtered out.",
+        suggestedFrequencyMinutes: 1440,
         confidence: 'basic',
         selectorSuggestions: [],
         pagePreview,
+        contentPreview: getContentPreview(null),
       },
     });
   }
