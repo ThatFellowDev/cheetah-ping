@@ -36,9 +36,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# claude code (contains approved commands with sensitive values)
+.claude/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
-.vercel
 .env*.local

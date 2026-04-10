@@ -11,35 +11,9 @@ import { authClient } from '@/modules/auth/auth-client';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import { Mail, ArrowLeft } from 'lucide-react';
 
-const COMING_SOON = true;
-
 const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 export default function LoginPage() {
-  if (COMING_SOON) {
-    return (
-      <div className="w-full max-w-md space-y-4 animate-fade-in-up">
-        <div className="text-center mb-2">
-          <Link href="/" className="font-heading text-2xl font-bold gradient-text">
-            Cheetah Ping
-          </Link>
-        </div>
-        <Card className="glass border-0">
-          <CardContent className="pt-10 pb-10 px-8 text-center space-y-3">
-            <h1 className="font-heading text-xl font-bold">Coming soon</h1>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              We&apos;re putting the finishing touches on sign-up.<br />Check back very soon.
-            </p>
-            <Link href="/" className="inline-block pt-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
-              ← Back to home
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);

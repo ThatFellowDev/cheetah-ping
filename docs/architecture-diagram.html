@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cheetah Ping — Platform Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161d;
+    --border: #1e2330;
+    --border-bright: #2a3045;
+    --text: #c8cdd8;
+    --text-dim: #5a6070;
+    --text-bright: #e8ecf4;
+    --accent-blue: #4a9eff;
+    --accent-green: #3dd68c;
+    --accent-amber: #f0a500;
+    --accent-purple: #9d7aff;
+    --accent-red: #ff6b6b;
+    --accent-cyan: #00d4d4;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', monospace;
+    min-height: 100vh;
+    padding: 60px 36px;
+  }
+
+  header {
+    max-width: 1440px;
+    margin: 0 auto 72px;
+    border-bottom: 1px solid var(--border-bright);
+    padding-bottom: 30px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+  }
+
+  header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent-blue);
+  }
+
+  header p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .diagram {
+    max-width: 1440px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* -- LAYER -- */
+  .layer {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .layer-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 0 0 12px 6px;
+    margin-top: 48px;
+  }
+
+  .layer-row {
+    display: flex;
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  /* -- NODE -- */
+  .node {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 24px 27px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+
+  .node:hover { border-color: var(--border-bright); }
+
+  .node-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 9px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .node-tag::before {
+    content: '';
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .node h3 {
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 6px;
+  }
+
+  .node p {
+    font-size: 18px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .node .badge {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    padding: 3px 9px;
+    border-radius: 5px;
+    margin-top: 12px;
+    letter-spacing: 0.08em;
+  }
+
+  /* colors */
+  .blue .node-tag { color: var(--accent-blue); }
+  .blue .node-tag::before { background: var(--accent-blue); box-shadow: 0 0 9px var(--accent-blue); }
+  .blue { border-color: #1a2d4a; }
+  .blue:hover { border-color: var(--accent-blue); }
+  .blue .badge { background: #1a2d4a; color: var(--accent-blue); }
+
+  .green .node-tag { color: var(--accent-green); }
+  .green .node-tag::before { background: var(--accent-green); box-shadow: 0 0 9px var(--accent-green); }
+  .green { border-color: #1a3a2d; }
+  .green:hover { border-color: var(--accent-green); }
+  .green .badge { background: #1a3a2d; color: var(--accent-green); }
+
+  .amber .node-tag { color: var(--accent-amber); }
+  .amber .node-tag::before { background: var(--accent-amber); box-shadow: 0 0 9px var(--accent-amber); }
+  .amber { border-color: #3a2c10; }
+  .amber:hover { border-color: var(--accent-amber); }
+  .amber .badge { background: #3a2c10; color: var(--accent-amber); }
+
+  .purple .node-tag { color: var(--accent-purple); }
+  .purple .node-tag::before { background: var(--accent-purple); box-shadow: 0 0 9px var(--accent-purple); }
+  .purple { border-color: #2a1f4a; }
+  .purple:hover { border-color: var(--accent-purple); }
+  .purple .badge { background: #2a1f4a; color: var(--accent-purple); }
+
+  .cyan .node-tag { color: var(--accent-cyan); }
+  .cyan .node-tag::before { background: var(--accent-cyan); box-shadow: 0 0 9px var(--accent-cyan); }
+  .cyan { border-color: #103a3a; }
+  .cyan:hover { border-color: var(--accent-cyan); }
+  .cyan .badge { background: #103a3a; color: var(--accent-cyan); }
+
+  .red .node-tag { color: var(--accent-red); }
+  .red .node-tag::before { background: var(--accent-red); box-shadow: 0 0 9px var(--accent-red); }
+  .red { border-color: #3a1a1a; }
+  .red:hover { border-color: var(--accent-red); }
+  .red .badge { background: #3a1a1a; color: var(--accent-red); }
+
+  /* -- ARROW -- */
+  .arrow-row {
+    display: flex;
+    gap: 18px;
+    padding: 6px 0;
+  }
+
+  .arrow {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .arrow-line {
+    width: 1px;
+    height: 30px;
+    background: linear-gradient(to bottom, var(--border-bright), transparent);
+    position: relative;
+  }
+
+  .arrow-line::after {
+    content: '\25BC';
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    color: var(--border-bright);
+  }
+
+  .arrow-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    margin-top: 18px;
+    white-space: nowrap;
+  }
+
+  /* -- DATA FIELDS TABLE -- */
+  .fields-section {
+    max-width: 1440px;
+    margin: 72px auto 0;
+    border-top: 1px solid var(--border);
+    padding-top: 48px;
+  }
+
+  .fields-section h2 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+  }
+
+  .fields-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    gap: 18px;
+  }
+
+  .field-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 21px 24px;
+  }
+
+  .field-card h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 12px;
+  }
+
+  .field-list {
+    list-style: none;
+  }
+
+  .field-list li {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    color: var(--text-dim);
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .field-list li:last-child { border-bottom: none; }
+
+  .field-list .type {
+    color: var(--accent-blue);
+    font-size: 15px;
+  }
+
+  /* -- AUDIT HIGHLIGHT -- */
+  .audit-highlight {
+    max-width: 1440px;
+    margin: 36px auto 0;
+    background: #0f1a10;
+    border: 1px solid var(--accent-green);
+    border-radius: 9px;
+    padding: 24px 30px;
+  }
+
+  .audit-highlight h3 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-green);
+    margin-bottom: 15px;
+  }
+
+  .audit-highlight code {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    color: #8de0b0;
+    line-height: 1.7;
+    display: block;
+    white-space: pre;
+  }
+
+  footer {
+    max-width: 1440px;
+    margin: 72px auto 0;
+    border-top: 1px solid var(--border);
+    padding-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  footer span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 15px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Cheetah Ping — Platform Architecture</h1>
+    <p style="margin-top:6px;">Serverless &middot; Event-Driven &middot; Near-Zero Cost &middot; 21 API Routes</p>
+  </div>
+  <p>v1.0 &middot; Apr 2026</p>
+</header>
+
+<div class="diagram">
+
+  <!-- LAYER 1: CLIENT -->
+  <div class="layer">
+    <div class="layer-label">01 — Client Layer &middot; Dark Glassmorphic UI</div>
+    <div class="layer-row">
+      <div class="node blue">
+        <div class="node-tag">Marketing Site</div>
+        <h3>Landing Page</h3>
+        <p>Particle hero, pricing tiers, FAQ, comparison table, scroll reveals. Converts visitors to signups with clear value proposition.</p>
+        <span class="badge">Next.js 16 &middot; React 19 &middot; Tailwind CSS</span>
+      </div>
+      <div class="node blue">
+        <div class="node-tag">Dashboard</div>
+        <h3>Monitor Management</h3>
+        <p>Monitor CRUD, change history timeline, notification settings, plan management. Real-time status indicators and AI-powered change summaries.</p>
+        <span class="badge">Next.js 16 &middot; React 19 &middot; Shadcn UI</span>
+      </div>
+      <div class="node blue">
+        <div class="node-tag">Admin Panel</div>
+        <h3>Platform Admin</h3>
+        <p>User stats, plan distribution charts, system overview. Admin-only route guards with auto-promotion via ADMIN_EMAIL env var.</p>
+        <span class="badge">Next.js 16 &middot; Admin Guards</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW -->
+  <div class="arrow-row">
+    <div class="arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">HTTPS &middot; REST &middot; 21 API routes</div>
+    </div>
+    <div class="arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">HTTPS &middot; REST &middot; 21 API routes</div>
+    </div>
+    <div class="arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">HTTPS &middot; REST &middot; 21 API routes</div>
+    </div>
+  </div>
+
+  <!-- LAYER 2: AUTH -->
+  <div class="layer">
+    <div class="layer-label">02 — Auth & Security &middot; Magic Link &middot; Bot Protection</div>
+    <div class="layer-row">
+      <div class="node purple">
+        <div class="node-tag">Identity Provider</div>
+        <h3>Magic Link Auth</h3>
+        <p>Passwordless email login via Better Auth. JWT sessions with 30-day expiry. Auto-promotes admin via ADMIN_EMAIL env var. Zero passwords stored.</p>
+        <span class="badge">Better Auth &middot; Magic Link Plugin</span>
+      </div>
+      <div class="node purple">
+        <div class="node-tag">Route Protection</div>
+        <h3>Guards + CAPTCHA + Rate Limiting</h3>
+        <p>Auth guards on all dashboard routes. Turnstile CAPTCHA on login. Upstash Redis rate limiter with in-memory fallback. URL validation + SSRF prevention on monitor URLs.</p>
+        <span class="badge">Turnstile &middot; Upstash Redis &middot; SSRF Guard</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW -->
+  <div class="arrow-row">
+    <div class="arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">Authenticated + rate-limited requests</div>
+    </div>
+  </div>
+
+  <!-- LAYER 3: DOMAIN MODULES -->
+  <div class="layer">
+    <div class="layer-label">03 — Domain Modules &middot; 6 Modules</div>
+    <div class="layer-row">
+      <div class="node amber">
+        <div class="node-tag">Module &middot; Core Engine</div>
+        <h3>Monitoring Engine</h3>
+        <p>Cloudflare Workers cron (every minute). Fetches URLs, extracts content via CSS selectors, word-level diffing, keyword detection. Batched processing (10 concurrent). Auto-pauses after 3 consecutive errors.</p>
+        <span class="badge">Cloudflare Workers &middot; Cheerio &middot; Cron</span>
+      </div>
+      <div class="node amber">
+        <div class="node-tag">Module &middot; Intelligence</div>
+        <h3>AI Analysis</h3>
+        <p>Groq-powered URL analysis on monitor setup (auto-suggests watch mode). AI change summaries in plain English. Graceful fallback to raw diffs when API key unavailable.</p>
+        <span class="badge">Groq &middot; Llama &middot; Provider-Agnostic</span>
+      </div>
+      <div class="node amber">
+        <div class="node-tag">Module &middot; Revenue</div>
+        <h3>Billing</h3>
+        <p>4 plan tiers: Free ($0) / Starter ($9) / Pro ($19) / Ultra ($49). Stripe Checkout + Customer Portal. Webhook processing for subscription lifecycle events.</p>
+        <span class="badge">Stripe &middot; 3 Webhook Events</span>
+      </div>
+    </div>
+    <div class="layer-row" style="margin-top:18px;">
+      <div class="node amber">
+        <div class="node-tag">Module &middot; Alerts</div>
+        <h3>Notifications</h3>
+        <p>Email alerts via Resend from notify.cheetahping.com. Slack + Discord webhook integrations. Auto-pause notifications on consecutive errors. Change history with AI summaries.</p>
+        <span class="badge">Resend &middot; Slack &middot; Discord</span>
+      </div>
+      <div class="node amber">
+        <div class="node-tag">Module &middot; Identity</div>
+        <h3>Auth Module</h3>
+        <p>Better Auth with magic link plugin. Session management (30-day expiry). Admin auto-promotion via env var. Drizzle ORM adapter for session persistence.</p>
+        <span class="badge">Better Auth &middot; Drizzle Adapter</span>
+      </div>
+      <div class="node amber">
+        <div class="node-tag">Module &middot; Enforcement</div>
+        <h3>Plan Limits</h3>
+        <p>Enforces per-tier limits: monitors (2/5/15/25), check intervals (24h/15m/5m/1m), history retention (7/30/90/180 days). Runtime enforcement at both API and Worker level.</p>
+        <span class="badge">Tier-Gated &middot; Runtime Enforced</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW -->
+  <div class="arrow-row">
+    <div class="arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">Module calls to external services (graceful degradation)</div>
+    </div>
+  </div>
+
+  <!-- LAYER 4: EXTERNAL SERVICES -->
+  <div class="layer">
+    <div class="layer-label">04 — External Services &middot; All Optional Except DB</div>
+    <div class="layer-row">
+      <div class="node cyan">
+        <div class="node-tag">Billing</div>
+        <h3>Stripe</h3>
+        <p>Checkout, customer portal, 3 webhook events. Free / Starter ($9) / Pro ($19) / Ultra ($49).</p>
+      </div>
+      <div class="node cyan">
+        <div class="node-tag">Email</div>
+        <h3>Resend</h3>
+        <p>Magic link emails + change alert emails. Domain: notify.cheetahping.com. Console fallback in dev.</p>
+      </div>
+      <div class="node cyan">
+        <div class="node-tag">Bot Protection</div>
+        <h3>Cloudflare Turnstile</h3>
+        <p>Managed CAPTCHA on login form. Dark theme widget. Zero-friction invisible challenge mode.</p>
+      </div>
+      <div class="node cyan">
+        <div class="node-tag">Rate Limiting</div>
+        <h3>Upstash Redis</h3>
+        <p>Sliding window rate limiter. In-memory fallback when Redis unavailable. Prevents auth brute-forcing.</p>
+      </div>
+    </div>
+    <div class="layer-row" style="margin-top:18px;">
+      <div class="node cyan">
+        <div class="node-tag">AI Inference</div>
+        <h3>Groq</h3>
+        <p>URL analysis + change summaries. Falls back to raw diffs without API key. Sub-second inference latency.</p>
+      </div>
+      <div class="node cyan">
+        <div class="node-tag">Monitoring Cron</div>
+        <h3>Cloudflare Workers</h3>
+        <p>Every-minute cron trigger. Batched URL checks (10 concurrent). Near-zero cost ($0.04/mo per user at scale).</p>
+      </div>
+      <div class="node cyan">
+        <div class="node-tag">DNS + CDN</div>
+        <h3>Cloudflare</h3>
+        <p>Domain management, SSL, caching. Turnstile widget hosting. Global edge network.</p>
+      </div>
+      <div class="node cyan">
+        <div class="node-tag">Hosting</div>
+        <h3>Vercel</h3>
+        <p>Next.js deployment. Automatic preview + production deploys from GitHub. Edge functions.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARROW -->
+  <div class="arrow-row">
+    <div class="arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">Drizzle ORM &middot; postgres.js &middot; Neon Serverless (TLS)</div>
+    </div>
+    <div class="arrow">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">HTTPS &middot; REST</div>
+    </div>
+  </div>
+
+  <!-- LAYER 5: DATA -->
+  <div class="layer">
+    <div class="layer-label">05 — Data Layer &middot; Serverless Postgres</div>
+    <div class="layer-row">
+      <div class="node green">
+        <div class="node-tag">Primary Database</div>
+        <h3>Neon PostgreSQL</h3>
+        <p>6 core tables: user, session, account, verification, monitors, change_log. Drizzle ORM with pg dialect. Pooled connections via Neon serverless driver. Scales to zero when idle.</p>
+        <span class="badge">Drizzle ORM &middot; Pooled &middot; Serverless</span>
+      </div>
+      <div class="node cyan">
+        <div class="node-tag">Monitoring Data</div>
+        <h3>Change History</h3>
+        <p>Full page snapshots, word-level diffs, AI summaries. Auto-pruned by plan tier (7-180 days). Immutable audit trail of all detected changes.</p>
+        <span class="badge">Auto-Pruning &middot; Plan-Tiered Retention</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- DESIGN PRINCIPLES -->
+<div class="audit-highlight" style="margin-top:60px; background:#0f1018; border-color:var(--accent-purple);">
+  <h3 style="color:var(--accent-purple);">Design Principles</h3>
+  <code style="color:#c4b0ff;">Serverless First       No servers to manage. Vercel + Workers + Neon scale to zero.
+Near-Zero Cost         Workers monitoring engine costs $0.04/mo per user at scale.
+Graceful Degradation   Every external service is optional except the database.
+AI-Enhanced            Smart URL analysis + plain-English change summaries via Groq.
+Plan-Gated             Tier limits enforced at both API and Worker level.
+Privacy-First          No tracking pixels. Minimal data collection. Auto-pruned history.</code>
+</div>
+
+<!-- DATA FIELDS BREAKDOWN -->
+<div class="fields-section">
+  <h2>Data stored per layer</h2>
+  <div class="fields-grid">
+
+    <div class="field-card">
+      <h4>Neon - 6 Core Tables</h4>
+      <ul class="field-list">
+        <li>user <span class="type">email, name, plan, stripeCustomerId, slackWebhookUrl, discordWebhookUrl</span></li>
+        <li>session <span class="type">token, expiresAt, userId</span></li>
+        <li>account <span class="type">providerId, accountId, userId</span></li>
+        <li>verification <span class="type">identifier, value, expiresAt</span></li>
+        <li>monitors <span class="type">url, label, selector, keyword, checkIntervalMinutes, lastSnapshot, status, consecutiveErrors</span></li>
+        <li>change_log <span class="type">diffSummary, aiSummary, previousSnapshot, newSnapshot, detectedAt</span></li>
+      </ul>
+    </div>
+
+    <div class="field-card">
+      <h4>Stripe - Subscription Data</h4>
+      <ul class="field-list">
+        <li>plan <span class="type">free / starter / pro / ultra</span></li>
+        <li>stripeCustomerId <span class="type">cus_...</span></li>
+        <li>Managed via webhook events <span class="type">checkout.session.completed, customer.subscription.updated, customer.subscription.deleted</span></li>
+      </ul>
+    </div>
+
+    <div class="field-card">
+      <h4>Workers - Runtime State</h4>
+      <ul class="field-list">
+        <li>Cron schedule <span class="type">* * * * * (every minute)</span></li>
+        <li>Batch size <span class="type">10 concurrent checks</span></li>
+        <li>Auto-pause threshold <span class="type">3 consecutive errors</span></li>
+        <li>Snapshot max size <span class="type">100KB</span></li>
+      </ul>
+    </div>
+
+    <div class="field-card">
+      <h4>Cloudflare - Infrastructure</h4>
+      <ul class="field-list">
+        <li>Workers invocations <span class="type">cron trigger logs</span></li>
+        <li>DNS records <span class="type">A, CNAME, MX</span></li>
+        <li>SSL certificates <span class="type">auto-managed</span></li>
+        <li>Turnstile challenge data <span class="type">dark theme widget</span></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <span>Architecture v1.0 &middot; Cheetah Ping &middot; Website Change Monitoring for Everyone</span>
+  <span>Vercel &middot; Neon PostgreSQL &middot; Cloudflare Workers &middot; Stripe &middot; Resend &middot; Groq &middot; Upstash Redis &middot; Cloudflare Turnstile</span>
+</footer>
+
+</body>
+</html>

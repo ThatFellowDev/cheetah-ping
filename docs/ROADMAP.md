@@ -23,11 +23,13 @@
 ## v1.1 - Growth (Weeks 2-3)
 
 - [ ] Annual billing toggle (20% discount)
+- [ ] Beast tier ($99/mo): 30-second checks via Cloudflare Durable Objects, 50 monitors, 1 year history
 - [ ] Use case landing pages for SEO (/use-cases/job-alerts, /use-cases/price-monitoring, etc.)
 - [ ] Onboarding email drip sequence (welcome, setup tips, upgrade nudge)
 - [ ] Mobile-responsive polish pass
 - [ ] Google Search Console + Analytics setup
 - [ ] Referral program ("Give 2 free monitors, get 2")
+- [ ] Affiliate portal (dashboard for affiliates, tracking links, payout management)
 
 ## v1.2 - Visual Monitoring (Month 2)
 
