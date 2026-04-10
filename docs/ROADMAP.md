@@ -32,9 +32,10 @@
 - [ ] Referral program ("Give 2 free monitors, get 2")
 - [ ] Affiliate portal (dashboard for affiliates, tracking links, payout management)
 
-## v1.2 - Visual Monitoring (Month 2)
+## v1.2 - Visual Monitoring + JS Support (Month 2)
 
-- [ ] Visual page screenshot selector (click-to-select elements via iframe preview)
+- [ ] Playwright-based page rendering (Railway or Browserless.io) — enables monitoring JS-rendered sites
+- [ ] Visual page screenshot selector (click-to-select elements via real screenshots)
 - [ ] Screenshot diff comparison (before/after visual diffs)
 - [ ] Screenshot storage on Cloudflare R2
 - [ ] Microsoft Teams integration

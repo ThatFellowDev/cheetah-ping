@@ -363,11 +363,12 @@ export function MonitorDetail({
                   toast.error('Failed to update sharing');
                 }
               }}
-              className={`text-xs px-2.5 py-1 rounded-full transition-all ${
+              className={`text-xs px-2.5 py-1 rounded-full transition-all cursor-pointer ${
                 monitor.shareEnabled
-                  ? 'bg-primary/20 text-primary'
-                  : 'bg-muted text-muted-foreground'
+                  ? 'bg-primary/20 text-primary hover:bg-primary/30'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
               }`}
+              title={monitor.shareEnabled ? 'Click to disable sharing' : 'Click to enable shareable links for changes'}
             >
               {monitor.shareEnabled ? 'On' : 'Off'}
             </button>

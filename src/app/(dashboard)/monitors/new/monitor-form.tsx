@@ -218,15 +218,15 @@ export function MonitorForm({ plan }: { plan: Plan }) {
           <button
             type="button"
             onClick={() => {
-              setUrl('https://store.steampowered.com/app/1245620/ELDEN_RING/');
-              setIntent('Alert me when the price drops');
-              setIntentPlaceholder('Alert me when the price drops');
+              setUrl('https://www.apple.com/newsroom/');
+              setIntent('Alert me when Apple publishes a new press release');
+              setIntentPlaceholder('Alert me when Apple publishes a new press release');
             }}
             className="w-full glass rounded-xl p-3 text-left border border-transparent hover:border-primary/30 transition-all group cursor-pointer"
           >
             <p className="text-[11px] text-primary font-medium mb-1">Try it — see how it works</p>
             <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-              Watch <span className="font-mono text-foreground/70">store.steampowered.com/.../ELDEN_RING</span> for price drops
+              Watch <span className="font-mono text-foreground/70">apple.com/newsroom</span> for new press releases
             </p>
           </button>
 
@@ -389,18 +389,27 @@ export function MonitorForm({ plan }: { plan: Plan }) {
               )}
             </motion.div>
 
-            {/* Content preview — what's being monitored */}
+            {/* Content being monitored */}
             {suggestion?.contentPreview && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="space-y-1.5"
+                className="space-y-2"
               >
-                <p className="text-[11px] text-muted-foreground/60 uppercase tracking-wider">Monitoring this content</p>
-                <div className="bg-muted/20 rounded-lg p-3 text-xs text-muted-foreground font-mono leading-relaxed max-h-24 overflow-y-auto">
+                <p className="text-[11px] text-muted-foreground/60 uppercase tracking-wider">What we'll monitor</p>
+                <div className="bg-muted/20 rounded-lg p-3 text-xs text-muted-foreground font-mono leading-relaxed max-h-28 overflow-y-auto">
                   {suggestion.contentPreview}
                 </div>
+                <a
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Open page to verify
+                </a>
               </motion.div>
             )}
 
