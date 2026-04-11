@@ -7,8 +7,16 @@ crons = ["* * * * *"]
 
 [vars]
 APP_URL = "https://www.cheetahping.com"
+R2_PUBLIC_URL = "https://screenshots.cheetahping.com"
 
 # Secrets (set via: wrangler secret put DATABASE_URL, etc.)
 # DATABASE_URL
 # RESEND_API_KEY
 # GROQ_API_KEY
+# BROWSERLESS_URL
+# BROWSERLESS_TOKEN
+
+# R2 bucket binding for screenshot storage (no secret needed — Cloudflare-internal auth)
+[[r2_buckets]]
+binding = "SCREENSHOTS"
+bucket_name = "cheetah-screenshots"

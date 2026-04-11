@@ -19,6 +19,9 @@ export const createMonitorSchema = z.object({
     .optional(),
   keyword: z.string().max(200).optional(),
   checkIntervalMinutes: z.number().int().positive(),
+  // Pre-captured baseline screenshot URL from the onboarding preview.
+  // The route handler verifies the prefix matches our R2 bucket before storing.
+  lastScreenshotUrl: z.string().url().max(500).optional(),
 });
 
 export const updateMonitorSchema = createMonitorSchema.partial().extend({

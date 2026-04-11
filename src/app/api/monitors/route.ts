@@ -74,6 +74,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Only trust lastScreenshotUrl if it points at our own R2 bucket — prevents
+  // a malicious caller from injecting an arbitrary URL into the field.
+  const r2Prefix = process.env.R2_PUBLIC_URL;
+  const trustedScreenshotUrl =
+    parsed.data.lastScreenshotUrl && r2Prefix && parsed.data.lastScreenshotUrl.startsWith(r2Prefix + '/')
+      ? parsed.data.lastScreenshotUrl
+      : null;
+
   const [newMonitor] = await db
     .insert(monitors)
     .values({
@@ -83,6 +91,7 @@ export async function POST(request: NextRequest) {
       selector: parsed.data.selector || null,
       keyword: parsed.data.keyword || null,
       checkIntervalMinutes: parsed.data.checkIntervalMinutes,
+      lastScreenshotUrl: trustedScreenshotUrl,
     })
     .returning();
 

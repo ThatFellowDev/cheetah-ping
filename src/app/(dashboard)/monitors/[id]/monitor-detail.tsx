@@ -41,6 +41,7 @@ interface Monitor {
   lastCheckedAt: Date | null;
   lastChangedAt: Date | null;
   lastSnapshot: string | null;
+  lastScreenshotUrl: string | null;
   errorMessage: string | null;
   consecutiveErrors: number;
   shareEnabled: boolean;
@@ -55,6 +56,8 @@ interface Change {
   previousSnapshot: string | null;
   newSnapshot: string | null;
   shareToken: string | null;
+  beforeScreenshotUrl: string | null;
+  afterScreenshotUrl: string | null;
 }
 
 function formatDate(date: Date | null) {
@@ -252,6 +255,17 @@ export function MonitorDetail({
         </div>
       </div>
 
+      {monitor.lastScreenshotUrl && (
+        <div className="rounded-xl overflow-hidden border border-white/10 bg-black/20">
+          <img
+            src={monitor.lastScreenshotUrl}
+            alt={monitor.label || monitor.url}
+            className="w-full object-cover object-top"
+            loading="lazy"
+          />
+        </div>
+      )}
+
       {monitor.status === 'error' && monitor.errorMessage && (
         <Card className="glass border-0 border-l-2 border-l-destructive/50">
           <CardContent className="pt-4 flex items-start gap-3">
@@ -435,8 +449,8 @@ export function MonitorDetail({
           ) : (
             <div className="space-y-4">
               {changes.map((change) => (
-                <div key={change.id} className="border rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
+                <div key={change.id} className="border rounded-lg p-3 space-y-3">
+                  <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">
                       {formatDate(change.detectedAt)}
                     </span>
@@ -459,7 +473,54 @@ export function MonitorDetail({
                     <p className="text-sm font-medium">{change.aiSummary}</p>
                   )}
                   {change.diffSummary && (
-                    <p className={`text-sm ${change.aiSummary ? 'text-xs text-muted-foreground mt-1' : ''}`}>{change.diffSummary}</p>
+                    <p className={`text-sm ${change.aiSummary ? 'text-xs text-muted-foreground' : ''}`}>{change.diffSummary}</p>
+                  )}
+                  {(change.beforeScreenshotUrl || change.afterScreenshotUrl) && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {change.beforeScreenshotUrl ? (
+                        <a
+                          href={change.beforeScreenshotUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block group"
+                        >
+                          <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-1">Before</p>
+                          <div className="aspect-[16/10] rounded-md overflow-hidden border border-white/10 bg-black/20 group-hover:border-white/20 transition-all">
+                            <img
+                              src={change.beforeScreenshotUrl}
+                              alt="Before"
+                              className="w-full h-full object-cover object-top"
+                              loading="lazy"
+                            />
+                          </div>
+                        </a>
+                      ) : (
+                        <div>
+                          <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-1">Before</p>
+                          <div className="aspect-[16/10] rounded-md border border-dashed border-white/10 flex items-center justify-center text-[10px] text-muted-foreground/50">
+                            No prior snapshot
+                          </div>
+                        </div>
+                      )}
+                      {change.afterScreenshotUrl && (
+                        <a
+                          href={change.afterScreenshotUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block group"
+                        >
+                          <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-1">After</p>
+                          <div className="aspect-[16/10] rounded-md overflow-hidden border border-white/10 bg-black/20 group-hover:border-white/20 transition-all">
+                            <img
+                              src={change.afterScreenshotUrl}
+                              alt="After"
+                              className="w-full h-full object-cover object-top"
+                              loading="lazy"
+                            />
+                          </div>
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}

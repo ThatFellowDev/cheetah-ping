@@ -15,6 +15,7 @@ interface Monitor {
   lastCheckedAt: Date | null;
   lastChangedAt: Date | null;
   createdAt: Date;
+  lastScreenshotUrl: string | null;
 }
 
 export function MonitorList({ monitors }: { monitors: Monitor[] }) {
