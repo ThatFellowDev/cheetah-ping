@@ -37,24 +37,39 @@ const VIEWPORT = { width: 1280, height: 800 };
 // reference anything from the outer Node closure.
 //
 // Important: Browserless v2's /chrome/function exposes a Puppeteer page, not
-// Playwright — so it's `page.setViewport`, not `page.setViewportSize`.
+// Playwright, so it's `page.setViewport`, not `page.setViewportSize`.
+//
+// Screenshot format is JPEG (quality 80), not PNG. PNG at full-page for long
+// pages like linear.app can hit 8-12MB base64, which blows past Browserless's
+// /chrome/function response budget and Cloudflare Tunnel buffers, causing
+// truncated payloads and broken images on the client. JPEG at 80% is 5-10x
+// smaller for screenshot-like content and perfectly fine for a visual picker.
+// We also cap the capture height at MAX_CAPTURE_HEIGHT so truly enormous
+// pages don't produce monster files.
+const MAX_CAPTURE_HEIGHT = 6000;
 const BROWSERLESS_FUNCTION = `
 export default async function ({ page, context }) {
   await page.setViewport({ width: ${VIEWPORT.width}, height: ${VIEWPORT.height} });
   await page.goto(context.url, { waitUntil: 'networkidle2', timeout: 25000 });
 
-  // Capture the full page, not just the viewport, so users can scroll the
-  // picker dialog to select elements below the fold.
-  const screenshotBuffer = await page.screenshot({ type: 'png', fullPage: true });
+  // Pin scroll to top so getBoundingClientRect returns document-absolute
+  // coordinates (at scrollY=0, rect.top IS the document-relative Y).
+  await page.evaluate(() => window.scrollTo(0, 0));
+
+  const docHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+  const captureHeight = Math.min(docHeight, ${MAX_CAPTURE_HEIGHT});
+
+  // JPEG + clip keeps response size manageable regardless of document length.
+  const screenshotBuffer = await page.screenshot({
+    type: 'jpeg',
+    quality: 80,
+    clip: { x: 0, y: 0, width: ${VIEWPORT.width}, height: captureHeight },
+  });
   const screenshot = screenshotBuffer.toString('base64');
 
-  const result = await page.evaluate(() => {
-    // Pin scroll to top so getBoundingClientRect() returns document-absolute
-    // coordinates (at scrollY=0, rect.top IS the document-relative Y).
-    window.scrollTo(0, 0);
-    const documentHeight = document.documentElement.scrollHeight;
-    const documentWidth = document.documentElement.scrollWidth;
-
+  // Element extraction filters to elements visible inside the captured area
+  // (anything past captureHeight wasn't screenshotted, so users can't click it).
+  const elements = await page.evaluate((maxY) => {
     function escapeAttr(v) {
       return String(v).replace(/\\\\/g, '\\\\\\\\').replace(/"/g, '\\\\"');
     }
@@ -105,9 +120,9 @@ export default async function ({ page, context }) {
     for (const el of candidates) {
       const rect = el.getBoundingClientRect();
       if (rect.width < 16 || rect.height < 12) continue;
-      // Sanity filter against document bounds (no longer viewport-clipped)
-      if (rect.bottom < 0 || rect.top > documentHeight) continue;
-      if (rect.right < 0 || rect.left > documentWidth) continue;
+      // Only include elements visible inside the captured screenshot area
+      if (rect.bottom < 0 || rect.top > maxY) continue;
+      if (rect.right < 0 || rect.left > ${VIEWPORT.width}) continue;
 
       const style = getComputedStyle(el);
       if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) < 0.1) continue;
@@ -129,15 +144,10 @@ export default async function ({ page, context }) {
 
       if (out.length >= 400) break;
     }
-    return { elements: out, documentHeight, documentWidth };
-  });
+    return out;
+  }, captureHeight);
 
-  return {
-    screenshot,
-    elements: result.elements,
-    documentHeight: result.documentHeight,
-    documentWidth: result.documentWidth,
-  };
+  return { screenshot, elements, imageHeight: captureHeight };
 }
 `;
 
@@ -197,28 +207,26 @@ export async function POST(request: NextRequest) {
     const payload = (await res.json()) as {
       screenshot?: string;
       elements?: Array<{ selector: string; x: number; y: number; w: number; h: number; text: string }>;
-      documentHeight?: number;
-      documentWidth?: number;
+      imageHeight?: number;
     };
 
-    if (!payload.screenshot || !Array.isArray(payload.elements) || typeof payload.documentHeight !== 'number') {
+    if (!payload.screenshot || !Array.isArray(payload.elements) || typeof payload.imageHeight !== 'number') {
       throw new Error('Browserless function returned an unexpected payload');
     }
 
     const screenshotBytes = Buffer.from(payload.screenshot, 'base64');
-    const key = `previews/${createId()}.png`;
-    const screenshotUrl = await uploadToR2(key, screenshotBytes, 'image/png');
+    const key = `previews/${createId()}.jpg`;
+    const screenshotUrl = await uploadToR2(key, screenshotBytes, 'image/jpeg');
 
     return NextResponse.json({
       data: {
         screenshotUrl,
-        // imageSize describes the actual PNG dimensions the client should scale
-        // against. Puppeteer's fullPage screenshot always uses the viewport
-        // width for the image width, and the document's scrollHeight for the
-        // image height.
+        // imageSize describes the actual JPEG dimensions the client should
+        // scale clicks against. Width is the fixed viewport width; height is
+        // the clipped capture height (min of document height and the cap).
         imageSize: {
           width: VIEWPORT.width,
-          height: payload.documentHeight,
+          height: payload.imageHeight,
         },
         elements: payload.elements,
       },
