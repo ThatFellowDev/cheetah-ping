@@ -109,7 +109,7 @@ export default async function SharedChangePage({ params }: Props) {
         {/* Footer */}
         <div className="text-center pt-4 border-t border-white/5">
           <Link href="/" className="text-xs text-white/30 hover:text-white/50 transition-colors">
-            Powered by Cheetah Ping — Website change monitoring for everyone
+            Powered by Cheetah Ping — paste a link, get alerted when it changes
           </Link>
         </div>
       </div>

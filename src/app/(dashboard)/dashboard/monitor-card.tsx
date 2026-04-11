@@ -89,8 +89,8 @@ export function MonitorCard({ monitor }: { monitor: Monitor }) {
               </h3>
               <StatusBadge status={monitor.status} />
             </div>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="truncate max-w-xs flex items-center gap-1">
+            <div className="flex items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
+              <span className="truncate max-w-[160px] sm:max-w-xs flex items-center gap-1">
                 <ExternalLink className="h-3 w-3 shrink-0" />
                 {monitor.url}
               </span>
@@ -99,7 +99,7 @@ export function MonitorCard({ monitor }: { monitor: Monitor }) {
                 {formatFrequency(monitor.checkIntervalMinutes)}
               </span>
             </div>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+            <div className="flex items-center gap-2 sm:gap-4 text-xs text-muted-foreground mt-1">
               <span>Checked: {timeAgo(monitor.lastCheckedAt)}</span>
               <span>Changed: {timeAgo(monitor.lastChangedAt)}</span>
             </div>

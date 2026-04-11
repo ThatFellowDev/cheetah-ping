@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -10,6 +10,13 @@ const geistMono = Geist_Mono({
 
 const siteUrl = "https://cheetahping.com";
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
@@ -17,7 +24,7 @@ export const metadata: Metadata = {
     template: "%s | Cheetah Ping",
   },
   description:
-    "Monitor any webpage and get alerted the moment something changes. Track jobs, apartments, restocks, prices, and more. Checks every minute. Free to start.",
+    "Paste a link. Get alerted when it changes. Track price drops, restocks, job postings, and more on any website. Checks every minute. Free to start.",
   keywords: [
     "website monitor",
     "page change alert",
@@ -38,13 +45,13 @@ export const metadata: Metadata = {
     siteName: "Cheetah Ping",
     title: "Cheetah Ping - Website Change Monitor",
     description:
-      "Monitor any webpage and get alerted the moment something changes. Checks every minute. AI-powered. Free to start.",
+      "Paste a link. Get alerted when it changes. AI-powered website change monitoring. Free to start.",
   },
   twitter: {
     card: "summary_large_image",
     title: "Cheetah Ping - Website Change Monitor",
     description:
-      "Monitor any webpage and get alerted the moment something changes. Checks every minute. Free to start.",
+      "Paste a link. Get alerted when it changes. AI-powered website change monitoring. Free to start.",
   },
   robots: {
     index: true,
