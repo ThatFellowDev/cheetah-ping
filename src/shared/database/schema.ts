@@ -90,6 +90,7 @@ export const monitors = pgTable('monitors', {
   errorMessage: text('error_message'),
   consecutiveErrors: integer('consecutive_errors').default(0).notNull(),
   shareEnabled: boolean('share_enabled').default(false).notNull(),
+  lastScreenshotUrl: text('last_screenshot_url'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (t) => [
   index('monitor_user_status_idx').on(t.userId, t.status),
@@ -107,6 +108,8 @@ export const changeLog = pgTable('change_log', {
   newSnapshot: text('new_snapshot'),
   notified: boolean('notified').default(false).notNull(),
   shareToken: text('share_token').$defaultFn(() => createId()),
+  beforeScreenshotUrl: text('before_screenshot_url'),
+  afterScreenshotUrl: text('after_screenshot_url'),
 }, (t) => [
   index('changelog_monitor_time_idx').on(t.monitorId, t.detectedAt),
 ]);

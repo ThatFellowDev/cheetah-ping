@@ -20,6 +20,7 @@ interface Monitor {
   lastCheckedAt: Date | null;
   lastChangedAt: Date | null;
   createdAt: Date;
+  lastScreenshotUrl: string | null;
 }
 
 function formatFrequency(minutes: number) {
@@ -82,26 +83,38 @@ export function MonitorCard({ monitor }: { monitor: Monitor }) {
     <>
       <Card className={`glass glass-hover p-4 border ${statusBorder} transition-all`}>
         <div className="flex items-start justify-between gap-4">
-          <Link href={`/monitors/${monitor.id}`} className="flex-1 min-w-0 group">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-medium truncate group-hover:text-primary transition-colors">
-                {monitor.label || monitor.url}
-              </h3>
-              <StatusBadge status={monitor.status} />
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
-              <span className="truncate max-w-[160px] sm:max-w-xs flex items-center gap-1">
-                <ExternalLink className="h-3 w-3 shrink-0" />
-                {monitor.url}
-              </span>
-              <span className="flex items-center gap-1 shrink-0">
-                <Clock className="h-3 w-3" />
-                {formatFrequency(monitor.checkIntervalMinutes)}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4 text-xs text-muted-foreground mt-1">
-              <span>Checked: {timeAgo(monitor.lastCheckedAt)}</span>
-              <span>Changed: {timeAgo(monitor.lastChangedAt)}</span>
+          <Link href={`/monitors/${monitor.id}`} className="flex items-start gap-3 flex-1 min-w-0 group">
+            {monitor.lastScreenshotUrl && (
+              <div className="hidden sm:block w-20 h-14 rounded-md overflow-hidden border border-white/10 bg-black/20 shrink-0">
+                <img
+                  src={monitor.lastScreenshotUrl}
+                  alt=""
+                  className="w-full h-full object-cover object-top"
+                  loading="lazy"
+                />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-medium truncate group-hover:text-primary transition-colors">
+                  {monitor.label || monitor.url}
+                </h3>
+                <StatusBadge status={monitor.status} />
+              </div>
+              <div className="flex items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
+                <span className="truncate max-w-[160px] sm:max-w-xs flex items-center gap-1">
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                  {monitor.url}
+                </span>
+                <span className="flex items-center gap-1 shrink-0">
+                  <Clock className="h-3 w-3" />
+                  {formatFrequency(monitor.checkIntervalMinutes)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-4 text-xs text-muted-foreground mt-1">
+                <span>Checked: {timeAgo(monitor.lastCheckedAt)}</span>
+                <span>Changed: {timeAgo(monitor.lastChangedAt)}</span>
+              </div>
             </div>
           </Link>
 

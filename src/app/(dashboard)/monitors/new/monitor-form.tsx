@@ -101,6 +101,8 @@ export function MonitorForm({ plan }: { plan: Plan }) {
   const [analyzing, setAnalyzing] = useState(false);
   const [creating, setCreating] = useState(false);
   const [showCustomize, setShowCustomize] = useState(false);
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  const [screenshotLoading, setScreenshotLoading] = useState(false);
 
   const [label, setLabel] = useState('');
   const [watchMode, setWatchMode] = useState<'page' | 'selector' | 'keyword'>('page');
@@ -128,7 +130,31 @@ export function MonitorForm({ plan }: { plan: Plan }) {
     }
 
     setAnalyzing(true);
+    setScreenshotLoading(true);
+    setScreenshotUrl(null);
     setFaviconError(false);
+
+    // Fire the screenshot in the background — as soon as analyze finishes,
+    // the post-analyzed view appears and the screenshot block shows its own
+    // loading state. When the screenshot eventually arrives it swaps in.
+    // Screenshot failures degrade silently (browserless / R2 hiccups should
+    // not block monitor creation).
+    void fetch('/api/monitors/screenshot', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: cleanUrl }),
+    })
+      .then(async (r) => {
+        const j = await r.json().catch(() => null);
+        if (r.ok && j?.data?.screenshotUrl) {
+          setScreenshotUrl(j.data.screenshotUrl);
+        } else {
+          console.warn('[screenshot] preview unavailable:', j?.error ?? r.statusText);
+        }
+      })
+      .catch((err) => console.warn('[screenshot] preview unavailable:', err))
+      .finally(() => setScreenshotLoading(false));
+
     try {
       const res = await fetch('/api/monitors/analyze', {
         method: 'POST',
@@ -170,6 +196,8 @@ export function MonitorForm({ plan }: { plan: Plan }) {
     setSelector('');
     setFrequency(0);
     setShowCustomize(false);
+    setScreenshotUrl(null);
+    setScreenshotLoading(false);
   }
 
   function handleClearAll() {
@@ -191,6 +219,9 @@ export function MonitorForm({ plan }: { plan: Plan }) {
 
       if (watchMode === 'keyword' && keyword) body.keyword = keyword;
       if (watchMode === 'selector' && selector) body.selector = selector;
+      // Pass through the preview screenshot as the monitor's baseline so the
+      // first detected change has a "before" image to compare against.
+      if (screenshotUrl) body.lastScreenshotUrl = screenshotUrl;
 
       const res = await fetch('/api/monitors', {
         method: 'POST',
@@ -234,7 +265,7 @@ export function MonitorForm({ plan }: { plan: Plan }) {
             }}
             className="w-full glass rounded-xl p-3 text-left border border-transparent hover:border-primary/30 transition-all group cursor-pointer"
           >
-            <p className="text-[11px] text-primary font-medium mb-1">Try it — see how it works</p>
+            <p className="text-[11px] text-primary font-medium mb-1">Try it. See how it works.</p>
             <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
               Watch <span className="font-mono text-foreground/70">apple.com/newsroom</span> for new press releases
             </p>
@@ -354,82 +385,94 @@ export function MonitorForm({ plan }: { plan: Plan }) {
             transition={{ duration: 0.4, ease: [0.21, 0.47, 0.32, 0.98] }}
             className="space-y-4"
           >
-            {/* Page preview card */}
+            {/* Compact page preview — L4 reassurance, muted */}
             {pagePreview && (pagePreview.title || pagePreview.description) && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="glass rounded-xl p-4 flex items-start gap-3"
+                className="flex items-center gap-2 text-xs text-muted-foreground/70 px-1"
               >
                 {pagePreview.favicon && !faviconError ? (
                   <img
                     src={pagePreview.favicon}
                     alt=""
-                    className="w-8 h-8 rounded-lg shrink-0 mt-0.5 bg-white/10"
+                    className="w-4 h-4 rounded shrink-0"
                     onError={() => setFaviconError(true)}
                   />
                 ) : (
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <Globe className="h-4 w-4 text-primary" />
-                  </div>
+                  <Globe className="h-3.5 w-3.5 shrink-0" />
                 )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {pagePreview.title || new URL(url).hostname}
-                  </p>
-                  {pagePreview.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                      {pagePreview.description}
-                    </p>
-                  )}
-                </div>
-                {suggestion?.confidence === 'ai' && (
-                  <div className="flex items-center gap-1 text-[10px] text-primary/70 shrink-0">
-                    <Brain className="h-3 w-3" />
-                    AI analyzed
+                <span className="truncate">
+                  {pagePreview.title || new URL(url).hostname}
+                </span>
+              </motion.div>
+            )}
+
+            {/* Screenshot preview — the visual confirmation that we're watching the right page.
+                 Shown as soon as Browserless returns the capture (in parallel with analyze).
+                 Silently absent if Browserless / R2 are unavailable — we degrade gracefully. */}
+            {(screenshotLoading || screenshotUrl) && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.12 }}
+                className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-black/20 aspect-[16/10]"
+              >
+                {screenshotUrl ? (
+                  <img
+                    src={screenshotUrl}
+                    alt="Page preview"
+                    className="w-full h-full object-cover object-top"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    <span>Capturing your page...</span>
                   </div>
                 )}
               </motion.div>
             )}
 
-            {/* AI confidence statement */}
+            {/* AI intent summary — L1 hero, the moneyshot */}
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="glass rounded-xl p-4 space-y-2"
+              className="relative pl-4 py-1 border-l-2 border-primary/60 space-y-2"
             >
-              <div className="flex items-start gap-2">
-                <Radar className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                <p className="text-sm font-medium">{suggestion?.intentSummary}</p>
+              <div className="flex items-start gap-3">
+                <Radar className="h-5 w-5 text-primary mt-1 shrink-0" />
+                <p className="text-base sm:text-lg font-semibold leading-snug">
+                  {suggestion?.intentSummary}
+                </p>
               </div>
               {suggestion?.alertExplanation && (
-                <p className="text-xs text-muted-foreground pl-6 leading-relaxed">
+                <p className="text-xs text-muted-foreground pl-8 leading-relaxed">
                   {suggestion.alertExplanation}
                 </p>
               )}
             </motion.div>
 
-            {/* Content being monitored */}
+            {/* Content being monitored — L4 reassurance, muted */}
             {suggestion?.contentPreview && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="space-y-2"
+                className="space-y-1.5 px-1"
               >
-                <p className="text-[11px] text-muted-foreground/60 uppercase tracking-wider">What we'll monitor</p>
-                <div className="bg-muted/20 rounded-lg p-3 text-xs text-muted-foreground font-mono leading-relaxed max-h-28 overflow-y-auto">
+                <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">What we'll monitor</p>
+                <div className="bg-muted/10 rounded-lg p-2.5 text-[11px] text-muted-foreground/70 font-mono leading-relaxed max-h-20 overflow-y-auto">
                   {suggestion.contentPreview}
                 </div>
                 <a
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors"
+                  className="inline-flex items-center gap-1 text-[11px] text-primary/70 hover:text-primary transition-colors"
                 >
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-2.5 w-2.5" />
                   Open page to verify
                 </a>
               </motion.div>
@@ -514,7 +557,7 @@ export function MonitorForm({ plan }: { plan: Plan }) {
                 onClick={() => setShowCustomize(!showCustomize)}
                 className="w-full text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors text-center py-1"
               >
-                {showCustomize ? '— Hide advanced options' : '+ Customize what to monitor'}
+                {showCustomize ? '− Hide advanced options' : '+ Customize what to monitor'}
               </button>
 
               <AnimatePresence>
