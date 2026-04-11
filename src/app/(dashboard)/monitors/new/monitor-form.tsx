@@ -446,29 +446,33 @@ export function MonitorForm({ plan }: { plan: Plan }) {
                 </p>
               </div>
               {suggestion?.alertExplanation && (
-                <p className="text-xs text-muted-foreground pl-8 leading-relaxed">
+                <p className="text-xs sm:text-sm text-muted-foreground pl-8 leading-relaxed">
                   {suggestion.alertExplanation}
                 </p>
               )}
             </motion.div>
 
-            {/* Content being monitored — L4 reassurance, muted */}
-            {suggestion?.contentPreview && (
+            {/* Content preview. In 'page' mode the hero screenshot above is
+                 the visual confirmation, so we hide this block and don't
+                 dump a raw body-text blob on the user. In 'selector' or
+                 'keyword' mode the snippet is useful because it shows exactly
+                 what piece of the page we'll be watching. */}
+            {suggestion?.contentPreview && watchMode !== 'page' && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
                 className="space-y-1.5 px-1"
               >
-                <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">What we'll monitor</p>
-                <div className="bg-muted/10 rounded-lg p-2.5 text-[11px] text-muted-foreground/70 font-mono leading-relaxed max-h-20 overflow-y-auto">
+                <p className="text-[10px] sm:text-xs text-muted-foreground/50 uppercase tracking-wider">What we'll monitor</p>
+                <div className="bg-muted/10 rounded-lg p-3 text-xs sm:text-sm text-muted-foreground/80 font-mono leading-relaxed line-clamp-3">
                   {suggestion.contentPreview}
                 </div>
                 <a
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] text-primary/70 hover:text-primary transition-colors"
+                  className="inline-flex items-center gap-1 text-[11px] sm:text-xs text-primary/70 hover:text-primary transition-colors"
                 >
                   <ExternalLink className="h-2.5 w-2.5" />
                   Open page to verify
