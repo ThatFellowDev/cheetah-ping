@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/modules/auth/auth';
 import { headers } from 'next/headers';
 import { isSafeUrl } from '@/lib/validate-url';
+import { smartFetch } from '@/lib/smart-fetch';
 import {
   validateSelector,
   previewSelector,
@@ -25,16 +26,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'URL not allowed' }, { status: 400 });
   }
 
-  // Fetch the page
+  // Fetch the page — falls back to Browserless for JS-rendered sites
   let html: string;
   try {
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(10_000),
-      headers: { 'User-Agent': 'CheetahPing/1.0' },
-      redirect: 'follow',
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    html = await res.text();
+    html = await smartFetch(url);
   } catch (err) {
     return NextResponse.json(
       { error: `Couldn't reach that page: ${err instanceof Error ? err.message : 'Unknown error'}` },
