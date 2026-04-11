@@ -174,13 +174,11 @@ export function MonitorForm({ plan }: { plan: Plan }) {
       setWatchMode(data.watchMode);
       setKeyword(data.keyword || '');
       setSelector(data.selector || '');
-      // Use AI-suggested frequency, clamped to plan minimum
-      const suggestedFreq = data.suggestedFrequencyMinutes || 60;
-      const clampedFreq = Math.max(suggestedFreq, limits.minIntervalMinutes);
-      const bestMatch = allowedFrequencies.reduce((prev, curr) =>
-        Math.abs(curr.value - clampedFreq) < Math.abs(prev.value - clampedFreq) ? curr : prev
-      );
-      setFrequency(bestMatch.value);
+      // Default to the longest allowed interval (weekly for most plans).
+      // FREQUENCY_OPTIONS is sorted longest to shortest, so allowedFrequencies[0]
+      // is always the longest interval the user's plan permits. Users opt into
+      // faster checks explicitly. We don't burn credit without intent.
+      setFrequency(allowedFrequencies[0]?.value ?? 1440);
     } catch {
       toast.error('Something went wrong analyzing the page');
     } finally {
@@ -439,7 +437,7 @@ export function MonitorForm({ plan }: { plan: Plan }) {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
-              className="relative pl-4 py-1 border-l-2 border-primary/60 space-y-2"
+              className="relative py-1 space-y-2"
             >
               <div className="flex items-start gap-3">
                 <Radar className="h-5 w-5 text-primary mt-1 shrink-0" />

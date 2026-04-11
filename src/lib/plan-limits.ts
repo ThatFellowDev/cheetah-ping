@@ -15,11 +15,12 @@ export const PLAN_DISPLAY = {
 } as const;
 
 export const FREQUENCY_OPTIONS = [
-  { value: 1, label: 'Every minute' },
-  { value: 5, label: 'Every 5 minutes' },
-  { value: 15, label: 'Every 15 minutes' },
-  { value: 30, label: 'Every 30 minutes' },
-  { value: 60, label: 'Every hour' },
-  { value: 360, label: 'Every 6 hours' },
+  { value: 10080, label: 'Every week' },
   { value: 1440, label: 'Every 24 hours' },
+  { value: 360, label: 'Every 6 hours' },
+  { value: 60, label: 'Every hour' },
+  { value: 30, label: 'Every 30 minutes' },
+  { value: 15, label: 'Every 15 minutes' },
+  { value: 5, label: 'Every 5 minutes' },
+  { value: 1, label: 'Every minute' },
 ] as const;
