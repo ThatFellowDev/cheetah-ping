@@ -38,10 +38,12 @@
 - [ ] Visual page screenshot selector (click-to-select elements via real screenshots)
 - [ ] Screenshot diff comparison (before/after visual diffs)
 - [ ] Screenshot storage on Cloudflare R2
+- [ ] **Visual highlight overlay on monitor detail** — capture the selected element's bounding box at monitor creation, store alongside `last_screenshot_url`, and overlay a highlight on the hero screenshot so users can visually confirm what's being tracked at a glance
 - [ ] Microsoft Teams integration
 - [ ] Google Sheets webhook integration
 - [ ] Public monitor pages (shareable change history)
 - [ ] Monitor status badges (embed in READMEs/dashboards)
+- [ ] **Authenticated page monitoring (tier 1)** — custom HTTP headers (Bearer/API keys), cookie paste, HTTP Basic Auth. Unlocks internal dashboards, API health checks, member-only pages. Includes "auth expired" detection + notification when cookies/tokens go stale.
 
 ## v1.3 - Distribution (Month 3)
 

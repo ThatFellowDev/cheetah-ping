@@ -15,7 +15,7 @@ export async function generateAiSummary(
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
+          model: 'openai/gpt-oss-120b',
           messages: [
             {
               role: 'system',
@@ -36,7 +36,16 @@ export async function generateAiSummary(
     if (!response.ok) return null;
 
     const data: any = await response.json();
-    return data.choices?.[0]?.message?.content?.trim() || null;
+    const raw = data.choices?.[0]?.message?.content?.trim() || '';
+
+    // Reject suspiciously short or generic responses. LLMs occasionally return
+    // things like "OK" or "The page changed" despite instructions not to. In
+    // those cases, returning null makes the caller fall back to the raw diff.
+    if (raw.length < 15) return null;
+    if (/^the page (has )?changed\.?$/i.test(raw)) return null;
+
+    // Strip wrapping quote marks some models add.
+    return raw.replace(/^["'`]|["'`]$/g, '').trim() || null;
   } catch {
     return null;
   }

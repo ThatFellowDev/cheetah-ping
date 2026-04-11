@@ -3,9 +3,10 @@ import { auth } from '@/modules/auth/auth';
 import { headers } from 'next/headers';
 import * as cheerio from 'cheerio';
 import { isSafeUrl } from '@/lib/validate-url';
+import { smartFetch } from '@/lib/smart-fetch';
 import { PICKER_SCRIPT } from './picker-script';
 
-const MAX_HTML_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_HTML_SIZE = 8 * 1024 * 1024; // 8MB — modern SPAs ship a lot of HTML
 
 function resolveUrl(relative: string, base: string): string {
   try {
@@ -56,37 +57,10 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Fetch the page
+  // Fetch the page — uses Browserless fallback for JS-rendered sites
   let html: string;
   try {
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(15_000),
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-      redirect: 'follow',
-    });
-
-    const contentType = res.headers.get('content-type') || '';
-    if (contentType && !contentType.includes('text/html') && !contentType.includes('text/xhtml') && !contentType.includes('application/xhtml')) {
-      return new Response(errorPage('This URL does not return an HTML page'), {
-        status: 400,
-        headers: { 'Content-Type': 'text/html; charset=utf-8' },
-      });
-    }
-
-    const contentLength = res.headers.get('content-length');
-    if (contentLength && parseInt(contentLength) > MAX_HTML_SIZE) {
-      return new Response(errorPage('Page is too large to preview'), {
-        status: 400,
-        headers: { 'Content-Type': 'text/html; charset=utf-8' },
-      });
-    }
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    html = await res.text();
+    html = await smartFetch(url);
 
     if (html.length > MAX_HTML_SIZE) {
       return new Response(errorPage('Page is too large to preview'), {

@@ -21,7 +21,7 @@ interface PickerElement {
 
 interface PickerData {
   screenshotUrl: string;
-  viewport: { width: number; height: number };
+  imageSize: { width: number; height: number };
   elements: PickerElement[];
 }
 
@@ -37,14 +37,15 @@ interface PagePickerDialogProps {
  * Visual element picker. Replaces the old iframe-based picker which broke on
  * JS-heavy SPAs. Flow:
  *
- *   1. Open dialog → POST /api/monitors/pick with the URL
+ *   1. Open dialog, POST /api/monitors/pick with the URL
  *   2. Server returns a screenshot URL + a list of elements with bounding
- *      boxes (in viewport pixels) and pre-generated CSS selectors
- *   3. Render the screenshot as a static <img>
+ *      boxes (in document coordinates, captured at scroll=0) and
+ *      pre-generated CSS selectors + an imageSize for scaling
+ *   3. Render the screenshot as a static <img> inside a scrollable container
  *   4. On click, scale the click coordinates from displayed pixels back to
- *      viewport pixels, then find the smallest element whose box contains
+ *      image pixels, then find the smallest element whose box contains
  *      the point (smallest = innermost = most specific)
- *   5. User confirms → return the selector
+ *   5. User confirms, return the selector
  */
 export function PagePickerDialog({
   url,
@@ -101,9 +102,10 @@ export function PagePickerDialog({
   }, [open, url, currentSelector]);
 
   /**
-   * Map a pointer event from displayed-image coordinates to viewport (Browserless)
-   * coordinates, then find the smallest matching element. Smallest = most
-   * specific, so clicking on a price inside a card hits the price not the card.
+   * Map a pointer event from displayed-image coordinates to document coordinates
+   * (the same coords Browserless used when collecting bounding boxes), then
+   * find the smallest matching element. Smallest = most specific, so clicking
+   * on a price inside a card hits the price not the card.
    */
   function findElementAtPoint(clientX: number, clientY: number): PickerElement | null {
     if (!data || !imgRef.current) return null;
@@ -116,18 +118,17 @@ export function PagePickerDialog({
     const localY = clientY - rect.top;
     if (localX < 0 || localY < 0 || localX > rect.width || localY > rect.height) return null;
 
-    // Scale to viewport coordinates (the same coords Browserless used when
-    // collecting bounding boxes).
-    const scaleX = data.viewport.width / rect.width;
-    const scaleY = data.viewport.height / rect.height;
-    const vpX = localX * scaleX;
-    const vpY = localY * scaleY;
+    // Scale to document coordinates (the coordinate space of the elements).
+    const scaleX = data.imageSize.width / rect.width;
+    const scaleY = data.imageSize.height / rect.height;
+    const docX = localX * scaleX;
+    const docY = localY * scaleY;
 
     let best: PickerElement | null = null;
     let bestArea = Infinity;
     for (const el of data.elements) {
-      if (vpX < el.x || vpX > el.x + el.w) continue;
-      if (vpY < el.y || vpY > el.y + el.h) continue;
+      if (docX < el.x || docX > el.x + el.w) continue;
+      if (docY < el.y || docY > el.y + el.h) continue;
       const area = el.w * el.h;
       if (area < bestArea) {
         best = el;
@@ -163,14 +164,14 @@ export function PagePickerDialog({
     /* ignore */
   }
 
-  // Scale a viewport-coordinate bounding box to displayed-image pixels
+  // Scale a document-coordinate bounding box to displayed-image pixels
   // for the highlight overlay.
   function highlightStyle(el: PickerElement | null): React.CSSProperties | undefined {
     if (!el || !data || !imgRef.current) return undefined;
     const rect = imgRef.current.getBoundingClientRect();
     if (rect.width === 0) return undefined;
-    const scaleX = rect.width / data.viewport.width;
-    const scaleY = rect.height / data.viewport.height;
+    const scaleX = rect.width / data.imageSize.width;
+    const scaleY = rect.height / data.imageSize.height;
     return {
       left: el.x * scaleX,
       top: el.y * scaleY,

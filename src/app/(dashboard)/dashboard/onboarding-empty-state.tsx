@@ -29,12 +29,12 @@ const SAMPLE_ALERTS = [
   {
     label: 'Sony WH-1000XM5',
     time: '2 min ago',
-    summary: <>The price dropped from <span className="line-through">$349.99</span> to <span className="text-green-400 font-medium">$248.00</span> — a 29% discount.</>,
+    summary: <>The price dropped from <span className="line-through">$349.99</span> to <span className="text-green-400 font-medium">$248.00</span>, a 29% discount.</>,
   },
   {
     label: 'Nike Dunk Low Panda',
     time: '18 min ago',
-    summary: <>The status changed from &quot;Sold Out&quot; to <span className="text-green-400 font-medium">&quot;Add to Cart&quot;</span> — item is back in stock.</>,
+    summary: <>The status changed from &quot;Sold Out&quot; to <span className="text-green-400 font-medium">&quot;Add to Cart&quot;</span>. The item is back in stock.</>,
   },
   {
     label: 'Stripe Careers - Engineering',
@@ -66,7 +66,7 @@ export function OnboardingEmptyState({ plan }: { plan: Plan }) {
           Welcome to <span className="gradient-text">Cheetah Ping</span>
         </h1>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Paste a link. Get alerted when it changes. That's it — we'll handle the rest.
+          Paste a link. Get alerted when it changes. That's it. We'll handle the rest.
         </p>
       </motion.div>
 
@@ -169,7 +169,7 @@ export function OnboardingEmptyState({ plan }: { plan: Plan }) {
         transition={{ duration: 0.5, delay: 0.5 }}
         className="text-center text-xs text-muted-foreground/50 pb-4"
       >
-        You're on the <span className="text-muted-foreground">{display.name}</span> plan — {limits.maxMonitors} monitors, checks every {limits.minIntervalMinutes >= 60 ? `${limits.minIntervalMinutes / 60}h` : limits.minIntervalMinutes === 1 ? 'minute' : `${limits.minIntervalMinutes}m`}
+        You're on the <span className="text-muted-foreground">{display.name}</span> plan. {limits.maxMonitors} monitors, checks every {limits.minIntervalMinutes >= 60 ? `${limits.minIntervalMinutes / 60}h` : limits.minIntervalMinutes === 1 ? 'minute' : `${limits.minIntervalMinutes}m`}
       </motion.div>
     </div>
   );

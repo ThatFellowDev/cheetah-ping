@@ -34,21 +34,21 @@ interface SelectorPreviewPanelProps {
 const ROBUSTNESS_CONFIG = {
   high: {
     icon: ShieldCheck,
-    label: 'Reliable — unlikely to break if the site updates',
+    label: 'Reliable. Unlikely to break if the site updates',
     color: 'text-emerald-400',
     bg: 'bg-emerald-400/10',
     border: 'border-emerald-400/20',
   },
   medium: {
     icon: Shield,
-    label: 'Should work — may need updating if the site changes',
+    label: 'Should work. May need updating if the site changes',
     color: 'text-amber-400',
     bg: 'bg-amber-400/10',
     border: 'border-amber-400/20',
   },
   low: {
     icon: ShieldAlert,
-    label: 'Fragile — likely to break if the site changes layout',
+    label: 'Fragile. Likely to break if the site changes layout',
     color: 'text-red-400',
     bg: 'bg-red-400/10',
     border: 'border-red-400/20',
@@ -225,7 +225,7 @@ export function SelectorPreviewPanel({
                   Preview
                   {preview.matchCount > 1 && (
                     <span className="text-amber-400">
-                      ({preview.matchCount} elements matched — content will be combined)
+                      ({preview.matchCount} elements matched, content will be combined)
                     </span>
                   )}
                 </span>
