@@ -31,7 +31,7 @@ function looksLikeJsShell(html: string): boolean {
 }
 
 async function browserlessFetch(url: string, env: Env): Promise<string> {
-  const endpoint = `${env.BROWSERLESS_URL}/content?token=${env.BROWSERLESS_TOKEN}`;
+  const endpoint = `${env.BROWSERLESS_URL}/chrome/content?token=${env.BROWSERLESS_TOKEN}`;
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
