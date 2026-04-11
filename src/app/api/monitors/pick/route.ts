@@ -39,13 +39,13 @@ const VIEWPORT = { width: 1280, height: 800 };
 // Important: Browserless v2's /chrome/function exposes a Puppeteer page, not
 // Playwright, so it's `page.setViewport`, not `page.setViewportSize`.
 //
-// Screenshot format is JPEG (quality 80), not PNG. PNG at full-page for long
-// pages like linear.app can hit 8-12MB base64, which blows past Browserless's
-// /chrome/function response budget and Cloudflare Tunnel buffers, causing
-// truncated payloads and broken images on the client. JPEG at 80% is 5-10x
-// smaller for screenshot-like content and perfectly fine for a visual picker.
-// We also cap the capture height at MAX_CAPTURE_HEIGHT so truly enormous
-// pages don't produce monster files.
+// Screenshot format is PNG. We tried JPEG for size reasons but the resulting
+// files were corrupted in the R2 pipeline (onboarding PNGs from
+// /chrome/screenshot loaded fine, but JPEGs from /chrome/function did not)
+// even though the JSON response parsed cleanly. Likely a base64-round-trip
+// bug in Browserless's JPEG path or a Puppeteer/Chromium clip+jpeg quirk.
+// PNG via the same endpoint works. We cap the capture height so even large
+// pages produce manageable files.
 const MAX_CAPTURE_HEIGHT = 6000;
 const BROWSERLESS_FUNCTION = `
 export default async function ({ page, context }) {
@@ -59,10 +59,10 @@ export default async function ({ page, context }) {
   const docHeight = await page.evaluate(() => document.documentElement.scrollHeight);
   const captureHeight = Math.min(docHeight, ${MAX_CAPTURE_HEIGHT});
 
-  // JPEG + clip keeps response size manageable regardless of document length.
+  // PNG with clip keeps payload bounded on long pages while staying on the
+  // proven-good format path.
   const screenshotBuffer = await page.screenshot({
-    type: 'jpeg',
-    quality: 80,
+    type: 'png',
     clip: { x: 0, y: 0, width: ${VIEWPORT.width}, height: captureHeight },
   });
   const screenshot = screenshotBuffer.toString('base64');
@@ -215,8 +215,17 @@ export async function POST(request: NextRequest) {
     }
 
     const screenshotBytes = Buffer.from(payload.screenshot, 'base64');
-    const key = `previews/${createId()}.jpg`;
-    const screenshotUrl = await uploadToR2(key, screenshotBytes, 'image/jpeg');
+    // Sanity check: a real screenshot is at least a few KB. If we decoded
+    // something much smaller, the response was likely truncated mid-stream
+    // and we'd be uploading garbage bytes to R2. Fail loudly instead of
+    // silently producing a broken image.
+    if (screenshotBytes.length < 2048) {
+      throw new Error(
+        `Screenshot decoded to only ${screenshotBytes.length} bytes — likely truncated by the Browserless response pipeline`,
+      );
+    }
+    const key = `previews/${createId()}.png`;
+    const screenshotUrl = await uploadToR2(key, screenshotBytes, 'image/png');
 
     return NextResponse.json({
       data: {
