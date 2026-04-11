@@ -5,6 +5,7 @@ import * as cheerio from 'cheerio';
 import Groq from 'groq-sdk';
 import { isSafeUrl } from '@/lib/validate-url';
 import { rateLimit } from '@/lib/rate-limit';
+import { smartFetch } from '@/lib/smart-fetch';
 
 export async function POST(request: NextRequest) {
   const rateLimited = await rateLimit(request);
@@ -24,17 +25,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'URLs to private or internal networks are not allowed' }, { status: 400 });
   }
 
-  // Fetch the page
+  // Fetch the page — falls back to Browserless for JS-rendered sites
   let html: string;
   let pageTitle = '';
   try {
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(10_000),
-      headers: { 'User-Agent': 'CheetahPing/1.0' },
-      redirect: 'follow',
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    html = await res.text();
+    html = await smartFetch(url);
   } catch (err) {
     return NextResponse.json(
       { error: `Couldn't reach that page: ${err instanceof Error ? err.message : 'Unknown error'}` },

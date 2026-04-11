@@ -19,6 +19,55 @@ interface Env {
   RESEND_API_KEY?: string;
   GROQ_API_KEY?: string;
   APP_URL: string;
+  BROWSERLESS_URL?: string;
+  BROWSERLESS_TOKEN?: string;
+}
+
+function looksLikeJsShell(html: string): boolean {
+  const text = html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  if (text.length < 500) return true;
+  if (/<div[^>]*id=["'](root|__next|app|__nuxt)["'][^>]*>\s*<\/div>/i.test(html)) return true;
+  return false;
+}
+
+async function browserlessFetch(url: string, env: Env): Promise<string> {
+  const endpoint = `${env.BROWSERLESS_URL}/content?token=${env.BROWSERLESS_TOKEN}`;
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      url,
+      gotoOptions: { waitUntil: 'networkidle2', timeout: 20_000 },
+    }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!res.ok) throw new Error(`Browserless ${res.status}: ${res.statusText}`);
+  return await res.text();
+}
+
+async function smartFetch(url: string, env: Env): Promise<string> {
+  // Try plain fetch first (free, fast)
+  try {
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(10_000),
+      headers: { 'User-Agent': 'CheetahPing/1.0 (https://cheetahping.com)' },
+      redirect: 'follow',
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    const html = await res.text();
+
+    if (looksLikeJsShell(html) && env.BROWSERLESS_URL && env.BROWSERLESS_TOKEN) {
+      console.log(`[FALLBACK] ${url} looks JS-rendered, using Browserless`);
+      return await browserlessFetch(url, env);
+    }
+    return html;
+  } catch (err) {
+    if (env.BROWSERLESS_URL && env.BROWSERLESS_TOKEN) {
+      console.log(`[FALLBACK] ${url} fetch failed, using Browserless`);
+      return await browserlessFetch(url, env);
+    }
+    throw err;
+  }
 }
 
 interface Monitor {
@@ -116,17 +165,10 @@ async function checkDueMonitors(sql: postgres.Sql, env: Env) {
 }
 
 async function checkMonitor(sql: postgres.Sql, env: Env, monitor: Monitor) {
-  // 1. Fetch URL
+  // 1. Fetch URL — try plain fetch, fall back to Browserless for JS-rendered sites
   let html: string;
   try {
-    const res = await fetch(monitor.url, {
-      signal: AbortSignal.timeout(10_000),
-      headers: { 'User-Agent': 'CheetahPing/1.0 (https://cheetahping.com)' },
-      redirect: 'follow',
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-    html = await res.text();
+    html = await smartFetch(monitor.url, env);
   } catch (err) {
     await handleFetchError(sql, env, monitor, err);
     return;
