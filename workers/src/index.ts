@@ -205,6 +205,9 @@ async function checkMonitor(sql: postgres.Sql, env: Env, monitor: Monitor) {
           <a href="${env.APP_URL}/login?ref=${monitor.user_id}" style="color:#666;">Invite them to Cheetah Ping</a>
         </p>
         ` : ''}
+        <p style="margin-top:16px;color:#aaa;font-size:11px;text-align:center;">
+          Cheetah Ping — paste a link, get alerted when it changes
+        </p>
       `,
     });
 

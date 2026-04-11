@@ -124,7 +124,7 @@ export function MonitorDetail({
         body: JSON.stringify({ selector: editSelector || null }),
       });
       if (!res.ok) throw new Error();
-      toast.success('CSS selector updated');
+      toast.success('Page section updated');
       setEditingSelector(false);
       router.refresh();
     } catch {
@@ -170,73 +170,75 @@ export function MonitorDetail({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Link href="/dashboard" className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }))}>
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            {editing ? (
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <input
-                  ref={inputRef}
-                  value={editLabel}
-                  onChange={(e) => setEditLabel(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleSaveLabel();
-                    if (e.key === 'Escape') handleCancelEdit();
-                  }}
-                  placeholder="Monitor label"
-                  className="font-heading text-2xl font-bold bg-transparent border-b-2 border-primary/50 outline-none flex-1 min-w-0 py-0.5"
-                  disabled={saving}
-                />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <Link href="/dashboard" className={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'shrink-0')}>
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              {editing ? (
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <input
+                    ref={inputRef}
+                    value={editLabel}
+                    onChange={(e) => setEditLabel(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveLabel();
+                      if (e.key === 'Escape') handleCancelEdit();
+                    }}
+                    placeholder="Monitor label"
+                    className="font-heading text-xl sm:text-2xl font-bold bg-transparent border-b-2 border-primary/50 outline-none flex-1 min-w-0 py-0.5"
+                    disabled={saving}
+                  />
+                  <button
+                    onClick={handleSaveLabel}
+                    disabled={saving}
+                    className="p-1.5 rounded-lg hover:bg-white/10 text-primary transition-all"
+                  >
+                    <Check className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={saving}
+                    className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground transition-all"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
                 <button
-                  onClick={handleSaveLabel}
-                  disabled={saving}
-                  className="p-1.5 rounded-lg hover:bg-white/10 text-primary transition-all"
+                  onClick={() => setEditing(true)}
+                  className="group flex items-center gap-2 hover:bg-white/5 px-2 py-1 -mx-2 rounded-lg transition-all min-w-0"
                 >
-                  <Check className="h-4 w-4" />
+                  <h1 className="font-heading text-xl sm:text-2xl font-bold truncate">
+                    {monitor.label || 'Untitled Monitor'}
+                  </h1>
+                  <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                 </button>
-                <button
-                  onClick={handleCancelEdit}
-                  disabled={saving}
-                  className="p-1.5 rounded-lg hover:bg-white/10 text-muted-foreground transition-all"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setEditing(true)}
-                className="group flex items-center gap-2 hover:bg-white/5 px-2 py-1 -mx-2 rounded-lg transition-all"
-              >
-                <h1 className="font-heading text-2xl font-bold truncate">
-                  {monitor.label || 'Untitled Monitor'}
-                </h1>
-                <Pencil className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
-            )}
-            <StatusBadge status={monitor.status} />
+              )}
+              <StatusBadge status={monitor.status} />
+            </div>
+            <a
+              href={monitor.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 truncate"
+            >
+              <span className="truncate">{monitor.url}</span>
+              <ExternalLink className="h-3 w-3 shrink-0" />
+            </a>
           </div>
-          <a
-            href={monitor.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
-          >
-            {monitor.url}
-            <ExternalLink className="h-3 w-3" />
-          </a>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 shrink-0 pl-10 sm:pl-0">
           <Button variant="outline" onClick={handleToggle} disabled={loading}>
             {monitor.status === 'active' ? (
               <>
-                <Pause className="mr-2 h-4 w-4" /> Pause
+                <Pause className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Pause</span>
               </>
             ) : (
               <>
-                <Play className="mr-2 h-4 w-4" /> Resume
+                <Play className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Resume</span>
               </>
             )}
           </Button>
@@ -245,7 +247,7 @@ export function MonitorDetail({
             onClick={() => setDeleteOpen(true)}
             disabled={loading}
           >
-            <Trash2 className="mr-2 h-4 w-4 text-destructive" /> Delete
+            <Trash2 className="h-4 w-4 text-destructive sm:mr-2" /> <span className="hidden sm:inline">Delete</span>
           </Button>
         </div>
       </div>
@@ -274,7 +276,7 @@ export function MonitorDetail({
         <CardContent className="space-y-3 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">URL</span>
-            <span className="truncate max-w-xs">{monitor.url}</span>
+            <span className="truncate max-w-[180px] sm:max-w-xs">{monitor.url}</span>
           </div>
           {monitor.label && (
             <div className="flex justify-between">
@@ -292,7 +294,7 @@ export function MonitorDetail({
           {(monitor.selector || editingSelector) && (
             <div>
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">CSS Selector</span>
+                <span className="text-muted-foreground">Page section</span>
                 {!editingSelector ? (
                   <div className="flex items-center gap-2">
                     <code className="text-xs bg-muted px-1.5 py-0.5 rounded">

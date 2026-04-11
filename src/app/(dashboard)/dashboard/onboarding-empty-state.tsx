@@ -66,7 +66,7 @@ export function OnboardingEmptyState({ plan }: { plan: Plan }) {
           Welcome to <span className="gradient-text">Cheetah Ping</span>
         </h1>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Set up your first monitor in under 60 seconds. Just paste a URL and our AI handles the rest.
+          Paste a link. Get alerted when it changes. That's it — we'll handle the rest.
         </p>
       </motion.div>
 

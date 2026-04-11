@@ -29,6 +29,7 @@ import {
   Shield,
   Bell,
   Hash,
+  X,
 } from 'lucide-react';
 import { SelectorPreviewPanel } from './components/selector-preview-panel';
 import { SelectorSuggestions, type SelectorSuggestion } from './components/selector-suggestions';
@@ -80,7 +81,7 @@ const watchModes = [
     id: 'selector' as const,
     icon: Crosshair,
     title: 'Page section',
-    description: 'Monitor a specific element',
+    description: 'Watch one part of the page',
   },
   {
     id: 'keyword' as const,
@@ -168,6 +169,15 @@ export function MonitorForm({ plan }: { plan: Plan }) {
     setKeyword('');
     setSelector('');
     setFrequency(0);
+    setShowCustomize(false);
+  }
+
+  function handleClearAll() {
+    handleReset();
+    setUrl('');
+    setIntent('');
+    setUrlPlaceholder('https://example.com');
+    setIntentPlaceholder('e.g. "Alert me when the price drops"');
   }
 
   async function handleCreate() {
@@ -264,18 +274,30 @@ export function MonitorForm({ plan }: { plan: Plan }) {
                 {analyzed ? 'Watching' : 'Paste the URL you want to watch'}
               </Label>
               <div className="flex gap-2">
-                <Input
-                  id="url"
-                  placeholder={urlPlaceholder}
-                  value={url}
-                  onChange={(e) => {
-                    setUrl(e.target.value);
-                    if (analyzed) handleReset();
-                  }}
-                  className="h-12 text-base flex-1"
-                  autoFocus
-                  disabled={analyzing}
-                />
+                <div className="relative flex-1">
+                  <Input
+                    id="url"
+                    placeholder={urlPlaceholder}
+                    value={url}
+                    onChange={(e) => {
+                      setUrl(e.target.value);
+                      if (analyzed) handleReset();
+                    }}
+                    className="h-12 text-base pr-10"
+                    autoFocus
+                    disabled={analyzing}
+                  />
+                  {url && !analyzing && (
+                    <button
+                      type="button"
+                      onClick={handleClearAll}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/10 transition-all"
+                      title="Clear and start over"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
                 {analyzed && (
                   <a
                     href={url}
@@ -294,7 +316,7 @@ export function MonitorForm({ plan }: { plan: Plan }) {
                 <div className="space-y-2">
                   <Label htmlFor="intent" className="text-sm text-muted-foreground flex items-center gap-1.5">
                     <Brain className="h-3.5 w-3.5 text-primary" />
-                    AI intent — describe what you want to track <span className="text-muted-foreground/50">(optional)</span>
+                    What should we watch for? <span className="text-muted-foreground/50">(optional)</span>
                   </Label>
                   <Input
                     id="intent"
@@ -492,7 +514,7 @@ export function MonitorForm({ plan }: { plan: Plan }) {
                 onClick={() => setShowCustomize(!showCustomize)}
                 className="w-full text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors text-center py-1"
               >
-                {showCustomize ? '— Hide advanced options' : '+ Customize watch mode, selector, label'}
+                {showCustomize ? '— Hide advanced options' : '+ Customize what to monitor'}
               </button>
 
               <AnimatePresence>

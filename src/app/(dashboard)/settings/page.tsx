@@ -17,6 +17,13 @@ const planFeatures: Record<Plan, string[]> = {
   ultra: ['50 monitors', 'Check every minute', '180 days change history'],
 };
 
+const planValueProps: Record<Plan, string> = {
+  free: '~150 checks/month on autopilot',
+  starter: '~28,800 checks/month on autopilot',
+  pro: '~432,000 checks/month on autopilot',
+  ultra: '~2.16M checks/month. Nothing slips past you.',
+};
+
 const RECOMMENDED_PLAN: Plan = 'pro';
 
 export default async function SettingsPage() {
@@ -105,6 +112,10 @@ export default async function SettingsPage() {
                       )}
                     </div>
                   </div>
+
+                  <p className="text-xs text-primary/80 mb-3 font-medium">
+                    {planValueProps[plan]}
+                  </p>
 
                   {/* Features */}
                   <ul className="space-y-2 mb-4">

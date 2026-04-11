@@ -144,12 +144,12 @@ export default function AdminUsersPage() {
                   </div>
 
                   {/* Plan selector */}
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 flex-wrap">
                     <Select
                       value={u.plan || 'free'}
                       onValueChange={(val) => val && handleChangePlan(u.id, val)}
                     >
-                      <SelectTrigger className="h-8 w-28 text-xs">
+                      <SelectTrigger className="h-8 w-24 sm:w-28 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>

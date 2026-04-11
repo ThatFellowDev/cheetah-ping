@@ -22,35 +22,35 @@ export default async function DashboardLayout({
     <div className="min-h-screen">
       <header className="sticky top-0 z-50 glass border-b border-white/5">
         <div className="mx-auto max-w-5xl flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="font-heading font-bold text-lg gradient-text">
+          <div className="flex items-center gap-2 sm:gap-6">
+            <Link href="/dashboard" className="font-heading font-bold text-lg gradient-text shrink-0">
               Cheetah Ping
             </Link>
             <nav className="flex items-center gap-1 text-sm">
               <Link
                 href="/dashboard"
-                className="text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all duration-200"
+                className="text-muted-foreground hover:text-foreground hover:bg-white/5 px-2 sm:px-3 py-1.5 rounded-lg transition-all duration-200"
               >
                 Dashboard
               </Link>
               <Link
                 href="/settings"
-                className="text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all duration-200"
+                className="text-muted-foreground hover:text-foreground hover:bg-white/5 px-2 sm:px-3 py-1.5 rounded-lg transition-all duration-200"
               >
                 Settings
               </Link>
               {isAdmin && (
                 <Link
                   href="/admin"
-                  className="text-primary/70 hover:text-primary hover:bg-primary/5 px-3 py-1.5 rounded-lg transition-all duration-200"
+                  className="text-primary/70 hover:text-primary hover:bg-primary/5 px-2 sm:px-3 py-1.5 rounded-lg transition-all duration-200"
                 >
                   Admin
                 </Link>
               )}
             </nav>
           </div>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">{authUser.email}</span>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <span className="text-sm text-muted-foreground hidden sm:block truncate max-w-[200px]">{authUser.email}</span>
             <LogoutButton />
           </div>
         </div>

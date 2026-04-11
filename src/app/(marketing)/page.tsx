@@ -91,6 +91,7 @@ const plans = [
     subtitle: 'Track a few prices',
     price: '$0',
     period: '/mo',
+    valueProp: '~150 checks/month on autopilot',
     features: ['5 monitors', 'Unlimited checks', 'Every 24 hours', '7 days history'],
     cta: 'Start for free',
     highlighted: false,
@@ -101,6 +102,7 @@ const plans = [
     subtitle: 'For serious deal hunters',
     price: '$9',
     period: '/mo',
+    valueProp: '~28,800 checks/month on autopilot',
     features: ['10 monitors', 'Unlimited checks', 'Every 15 minutes', '30 days history'],
     cta: 'Get started',
     highlighted: false,
@@ -111,6 +113,7 @@ const plans = [
     subtitle: 'For power users',
     price: '$19',
     period: '/mo',
+    valueProp: '~432,000 checks/month on autopilot',
     features: ['50 monitors', 'Unlimited checks', 'Every 5 minutes', '90 days history'],
     cta: 'Go pro',
     highlighted: true,
@@ -121,6 +124,7 @@ const plans = [
     subtitle: "Can't miss a beat",
     price: '$49',
     period: '/mo',
+    valueProp: '~2.16M checks/month. Nothing slips past you.',
     features: ['50 monitors', 'Unlimited checks', 'Every minute', '180 days history'],
     cta: 'Go ultra',
     highlighted: false,
@@ -245,7 +249,7 @@ function FaqItem({ q, a, index }: { q: string; a: string; index: number }) {
         onClick={() => setOpen(!open)}
         className="w-full text-left glass glass-hover rounded-xl p-4 transition-all"
       >
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
           <h3 className="font-semibold">{q}</h3>
           <motion.div
             animate={{ rotate: open ? 180 : 0 }}
@@ -545,10 +549,15 @@ export default function LandingPage() {
                       {(plan as any).subtitle && (
                         <p className="text-xs text-muted-foreground mb-2">{(plan as any).subtitle}</p>
                       )}
-                      <div className="mb-4">
+                      <div className="mb-3">
                         <span className="font-heading text-3xl font-bold">{plan.price}</span>
                         <span className="text-muted-foreground">{plan.period}</span>
                       </div>
+                      {(plan as any).valueProp && (
+                        <p className="text-xs text-primary/80 mb-4 font-medium">
+                          {(plan as any).valueProp}
+                        </p>
+                      )}
                       <ul className="space-y-2 mb-6">
                         {plan.features.map((f) => (
                           <li key={f} className="flex items-center gap-2 text-sm">
