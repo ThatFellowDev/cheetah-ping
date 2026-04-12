@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/require-auth';
 import { PLAN_LIMITS, PLAN_DISPLAY } from '@/lib/plan-limits';
 import { MonitorForm } from './monitor-form';
 import { LinkButton } from '@/shared/components/link-button';
+import { NewMonitorShell } from './new-monitor-shell';
 
 export default async function NewMonitorPage() {
   const user = await requireAuth();
@@ -36,13 +37,8 @@ export default async function NewMonitorPage() {
   }
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
-      <div className="text-center">
-        <h1 className="font-heading text-2xl font-bold">
-          New <span className="gradient-text">Monitor</span>
-        </h1>
-      </div>
+    <NewMonitorShell plan={user.plan}>
       <MonitorForm plan={user.plan} />
-    </div>
+    </NewMonitorShell>
   );
 }
