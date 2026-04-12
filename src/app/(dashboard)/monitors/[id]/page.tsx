@@ -25,5 +25,5 @@ export default async function MonitorDetailPage({
     limit: 50,
   });
 
-  return <MonitorDetail monitor={monitor} changes={changes} />;
+  return <MonitorDetail monitor={monitor} changes={changes} plan={user.plan} />;
 }
