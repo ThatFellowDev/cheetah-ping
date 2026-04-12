@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { PostHogProvider } from "@/shared/analytics/posthog-provider";
 import "./globals.css";
 
 const geistMono = Geist_Mono({
@@ -124,8 +126,11 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col">
-        {children}
+        <PostHogProvider>
+          {children}
+        </PostHogProvider>
         <Toaster richColors position="bottom-right" />
+        <SpeedInsights />
       </body>
     </html>
   );

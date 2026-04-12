@@ -1,44 +1,7 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { LinkButton } from '@/shared/components/link-button';
-
-const faqJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'How fast will I get notified?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'On the Ultra plan, we check every minute. The moment we detect a change, you get an email, Slack, or Discord notification. Most users get notified within 1-5 minutes.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'What websites work with Cheetah Ping?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Any public webpage - job boards, apartment listings, e-commerce product pages, government appointment sites. The only limitation is JavaScript-heavy single-page apps.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Can I watch just part of a page?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes. Use a CSS selector to monitor a specific section, or use keyword monitoring to watch for specific words appearing or disappearing.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'How much does Cheetah Ping cost?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Free for 5 monitors with daily checks. Starter is $9/mo for 15-minute checks, Pro is $19/mo for 5-minute checks, and Ultra is $49/mo for every-minute checks.',
-      },
-    },
-  ],
-};
+import { CaptureAttribution } from '@/shared/attribution/capture-attribution';
 
 export default function MarketingLayout({
   children,
@@ -53,7 +16,7 @@ export default function MarketingLayout({
             Cheetah Ping
           </Link>
           <nav className="hidden md:flex items-center gap-1">
-            <a href="#use-cases" className="text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">Use Cases</a>
+            <Link href="/use-cases" className="text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">Use Cases</Link>
             <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">How It Works</a>
             <a href="#compare" className="text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">Compare</a>
             <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">Pricing</a>
@@ -73,10 +36,9 @@ export default function MarketingLayout({
           </div>
         </div>
       </header>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+      <Suspense>
+        <CaptureAttribution />
+      </Suspense>
       {children}
       <footer className="border-t border-white/5 py-8 mt-16">
         <div className="mx-auto max-w-5xl px-4 flex items-center justify-between text-sm text-muted-foreground">
