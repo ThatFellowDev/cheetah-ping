@@ -25,11 +25,22 @@ interface PickerData {
   elements: PickerElement[];
 }
 
+export interface PickedElementInfo {
+  selector: string;
+  text: string;
+  /** Bounding box in document coordinates (matches imageSize scale) */
+  box: { x: number; y: number; w: number; h: number };
+  /** The full-page screenshot URL from the picker session */
+  screenshotUrl: string;
+  /** The original image dimensions (for scaling the highlight overlay) */
+  imageSize: { width: number; height: number };
+}
+
 interface PagePickerDialogProps {
   url: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelectorPicked: (selector: string) => void;
+  onSelectorPicked: (info: PickedElementInfo) => void;
   currentSelector?: string;
 }
 
@@ -151,8 +162,14 @@ export function PagePickerDialog({
   }
 
   function handleConfirm() {
-    if (pickedSelector) {
-      onSelectorPicked(pickedSelector);
+    if (pickedSelector && pickedElement && data) {
+      onSelectorPicked({
+        selector: pickedSelector,
+        text: pickedPreview,
+        box: { x: pickedElement.x, y: pickedElement.y, w: pickedElement.w, h: pickedElement.h },
+        screenshotUrl: data.screenshotUrl,
+        imageSize: data.imageSize,
+      });
       onOpenChange(false);
     }
   }

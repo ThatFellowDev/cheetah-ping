@@ -42,7 +42,21 @@ const ELEMENT_EXTRACTION_FUNCTION = `
 export default async function ({ page, context }) {
   await page.setViewport({ width: ${VIEWPORT.width}, height: ${VIEWPORT.height} });
   await page.goto(context.url, { waitUntil: 'networkidle2', timeout: 25000 });
+
+  // Scroll through the page in steps to trigger intersection-observer and
+  // lazy-loaded content. The screenshot endpoint (fullPage:true) does this
+  // internally for pixel capture, but /chrome/function doesn't, so elements
+  // below the fold won't be in the DOM unless we force them to load.
+  const scrollHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+  const step = 800;
+  for (let y = 0; y < scrollHeight; y += step) {
+    await page.evaluate((scrollY) => window.scrollTo(0, scrollY), y);
+    // Brief pause lets intersection observers fire and content render
+    await new Promise(r => setTimeout(r, 150));
+  }
+  // Scroll back to top and wait for any final renders
   await page.evaluate(() => window.scrollTo(0, 0));
+  await new Promise(r => setTimeout(r, 300));
 
   return await page.evaluate(() => {
     const documentHeight = document.documentElement.scrollHeight;
