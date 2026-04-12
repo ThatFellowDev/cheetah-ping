@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { SelectorPreviewPanel } from './components/selector-preview-panel';
 import { SelectorSuggestions, type SelectorSuggestion } from './components/selector-suggestions';
-import { PagePickerDialog } from './components/page-picker-dialog';
+import { PagePickerDialog, type PickedElementInfo } from './components/page-picker-dialog';
 
 interface PagePreview {
   title: string;
@@ -111,6 +111,14 @@ export function MonitorForm({ plan }: { plan: Plan }) {
   const [frequency, setFrequency] = useState<number>(0);
   const [faviconError, setFaviconError] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickedElement, setPickedElement] = useState<PickedElementInfo | null>(null);
+  // Ref to the hero screenshot <img> for computing highlight overlay position.
+  // heroLoaded is a counter that increments on each img onLoad to force a
+  // re-render so the overlay coordinates are computed after the image has
+  // its natural dimensions.
+  const heroImgRef = useRef<HTMLImageElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [heroLoaded, setHeroLoaded] = useState(0);
 
   const limits = PLAN_LIMITS[plan];
   const allowedFrequencies = FREQUENCY_OPTIONS.filter(
@@ -196,6 +204,7 @@ export function MonitorForm({ plan }: { plan: Plan }) {
     setShowCustomize(false);
     setScreenshotUrl(null);
     setScreenshotLoading(false);
+    setPickedElement(null);
   }
 
   function handleClearAll() {
@@ -408,27 +417,106 @@ export function MonitorForm({ plan }: { plan: Plan }) {
             )}
 
             {/* Screenshot preview — the visual confirmation that we're watching the right page.
-                 Shown as soon as Browserless returns the capture (in parallel with analyze).
-                 Silently absent if Browserless / R2 are unavailable — we degrade gracefully. */}
-            {(screenshotLoading || screenshotUrl) && (
+                 When a selector has been picked via the visual picker, we swap in the
+                 picker's full-page screenshot and overlay a highlight box on the
+                 selected element so the user sees exactly what they chose. */}
+            {(screenshotLoading || screenshotUrl || pickedElement) && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.12 }}
-                className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-black/20 aspect-[16/10]"
+                className="relative w-full overflow-hidden rounded-xl border border-white/10 bg-black/20"
               >
-                {screenshotUrl ? (
-                  <img
-                    src={screenshotUrl}
-                    alt="Page preview"
-                    className="w-full h-full object-cover object-top"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-xs text-muted-foreground">
-                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                    <span>Capturing your page...</span>
-                  </div>
-                )}
+                {(() => {
+                  // When the user picked an element, show the picker's full-page
+                  // screenshot with a highlight overlay on the chosen element.
+                  const heroSrc = pickedElement?.screenshotUrl ?? screenshotUrl;
+                  if (heroSrc) {
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => setPickerOpen(true)}
+                        className="relative w-full text-left group cursor-crosshair"
+                        title="Click to pick a specific element to watch"
+                      >
+                        <img
+                          ref={heroImgRef}
+                          src={heroSrc}
+                          alt="Page preview"
+                          className={`w-full h-auto ${pickedElement ? 'max-h-[50vh] object-contain object-top' : 'aspect-[16/10] object-cover object-top'}`}
+                          onLoad={() => setHeroLoaded((n) => n + 1)}
+                        />
+                        {/* Highlight overlay for picked element */}
+                        {pickedElement && heroImgRef.current && heroImgRef.current.naturalWidth > 0 && (
+                          <div
+                            className="absolute border-2 border-primary bg-primary/15 rounded-sm pointer-events-none transition-all"
+                            style={(() => {
+                              const img = heroImgRef.current!;
+                              const displayW = img.clientWidth;
+                              const displayH = img.clientHeight;
+                              const scaleX = displayW / pickedElement.imageSize.width;
+                              const scaleY = displayH / pickedElement.imageSize.height;
+                              return {
+                                left: pickedElement.box.x * scaleX,
+                                top: pickedElement.box.y * scaleY,
+                                width: pickedElement.box.w * scaleX,
+                                height: pickedElement.box.h * scaleY,
+                              };
+                            })()}
+                          />
+                        )}
+                        {/* Hover hint to open the visual picker */}
+                        {!pickedElement && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all">
+                            <span className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/70 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Crosshair className="h-3.5 w-3.5" />
+                              Click to pick an element
+                            </span>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  }
+                  return (
+                    <div className="aspect-[16/10] flex flex-col items-center justify-center gap-2 text-xs text-muted-foreground">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      <span>Capturing your page...</span>
+                    </div>
+                  );
+                })()}
+              </motion.div>
+            )}
+
+            {/* Picked element confirmation bar */}
+            {pickedElement && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 border border-primary/20"
+              >
+                <Crosshair className="h-4 w-4 text-primary shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-foreground truncate">
+                    Watching this element
+                  </p>
+                  {pickedElement.text && (
+                    <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                      {pickedElement.text}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPickedElement(null);
+                    setSelector('');
+                    setWatchMode('page');
+                  }}
+                  className="p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all shrink-0"
+                  title="Remove selection"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
               </motion.div>
             )}
 
@@ -453,11 +541,11 @@ export function MonitorForm({ plan }: { plan: Plan }) {
             </motion.div>
 
             {/* Content preview. In 'page' mode the hero screenshot above is
-                 the visual confirmation, so we hide this block and don't
-                 dump a raw body-text blob on the user. In 'selector' or
-                 'keyword' mode the snippet is useful because it shows exactly
-                 what piece of the page we'll be watching. */}
-            {suggestion?.contentPreview && watchMode !== 'page' && (
+                 the visual confirmation, so we hide this block. When an element
+                 was visually picked, the confirmation bar above covers it, so
+                 skip the raw text dump. In selector/keyword mode without a visual
+                 pick, the AI content preview helps verify what we're watching. */}
+            {suggestion?.contentPreview && watchMode !== 'page' && !pickedElement && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -583,7 +671,7 @@ export function MonitorForm({ plan }: { plan: Plan }) {
                               <button
                                 key={mode.id}
                                 type="button"
-                                onClick={() => setWatchMode(mode.id)}
+                                onClick={() => { setWatchMode(mode.id); if (mode.id !== 'selector') setPickedElement(null); }}
                                 className={`
                                   relative flex flex-col items-center gap-2 p-4 rounded-xl text-center transition-all
                                   ${isActive
@@ -661,14 +749,14 @@ export function MonitorForm({ plan }: { plan: Plan }) {
                                 {suggestion?.selectorSuggestions && suggestion.selectorSuggestions.length > 0 && (
                                   <SelectorSuggestions
                                     suggestions={suggestion.selectorSuggestions}
-                                    onSelect={(sel) => setSelector(sel)}
+                                    onSelect={(sel) => { setSelector(sel); setPickedElement(null); }}
                                     selectedSelector={selector}
                                   />
                                 )}
                                 <SelectorPreviewPanel
                                   url={url}
                                   value={selector}
-                                  onChange={setSelector}
+                                  onChange={(sel) => { setSelector(sel); setPickedElement(null); }}
                                 />
                               </div>
                             </motion.div>
@@ -702,9 +790,10 @@ export function MonitorForm({ plan }: { plan: Plan }) {
           url={url}
           open={pickerOpen}
           onOpenChange={setPickerOpen}
-          onSelectorPicked={(sel) => {
-            setSelector(sel);
+          onSelectorPicked={(info) => {
+            setSelector(info.selector);
             setWatchMode('selector');
+            setPickedElement(info);
           }}
           currentSelector={selector}
         />
