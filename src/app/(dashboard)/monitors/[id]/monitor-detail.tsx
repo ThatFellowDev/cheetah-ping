@@ -27,7 +27,7 @@ import {
   Share2,
   Copy,
 } from 'lucide-react';
-import { FREQUENCY_OPTIONS } from '@/lib/plan-limits';
+import { FREQUENCY_OPTIONS, PLAN_LIMITS, type Plan } from '@/lib/plan-limits';
 import { SelectorPreviewPanel } from '../new/components/selector-preview-panel';
 
 interface Monitor {
@@ -72,9 +72,11 @@ function formatFrequency(minutes: number) {
 export function MonitorDetail({
   monitor,
   changes,
+  plan = 'free',
 }: {
   monitor: Monitor;
   changes: Change[];
+  plan?: Plan;
 }) {
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -86,6 +88,9 @@ export function MonitorDetail({
   const [editingSelector, setEditingSelector] = useState(false);
   const [editSelector, setEditSelector] = useState(monitor.selector || '');
   const [savingSelector, setSavingSelector] = useState(false);
+  const [editingFrequency, setEditingFrequency] = useState(false);
+  const [savingFrequency, setSavingFrequency] = useState(false);
+  const [sharingLoading, setSharingLoading] = useState(false);
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -298,12 +303,84 @@ export function MonitorDetail({
               <span>{monitor.label}</span>
             </div>
           )}
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Check frequency</span>
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {formatFrequency(monitor.checkIntervalMinutes)}
-            </span>
+          <div>
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Check frequency</span>
+              {!editingFrequency ? (
+                <button
+                  onClick={() => setEditingFrequency(true)}
+                  className="flex items-center gap-1.5 group hover:text-foreground transition-colors"
+                >
+                  <Clock className="h-3 w-3" />
+                  <span>{formatFrequency(monitor.checkIntervalMinutes)}</span>
+                  <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
+              ) : (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setEditingFrequency(false)}
+                    className="p-1 rounded hover:bg-white/10 text-muted-foreground transition-all"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+            {editingFrequency && (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mt-2">
+                {FREQUENCY_OPTIONS.map((freq) => {
+                  const limits = PLAN_LIMITS[plan];
+                  const locked = freq.value < limits.minIntervalMinutes;
+                  const selected = monitor.checkIntervalMinutes === freq.value;
+                  return (
+                    <button
+                      key={freq.value}
+                      type="button"
+                      disabled={savingFrequency}
+                      onClick={async () => {
+                        if (locked) {
+                          toast('Upgrade your plan for faster checks', {
+                            action: { label: 'Upgrade', onClick: () => router.push('/settings') },
+                          });
+                          return;
+                        }
+                        if (selected) { setEditingFrequency(false); return; }
+                        setSavingFrequency(true);
+                        try {
+                          const res = await fetch(`/api/monitors/${monitor.id}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ checkIntervalMinutes: freq.value }),
+                          });
+                          if (!res.ok) throw new Error();
+                          toast.success(`Now checking ${freq.label.toLowerCase()}`);
+                          setEditingFrequency(false);
+                          router.refresh();
+                        } catch {
+                          toast.error('Failed to update frequency');
+                        } finally {
+                          setSavingFrequency(false);
+                        }
+                      }}
+                      className={`relative px-2 py-1.5 rounded-lg text-xs text-center transition-all ${
+                        selected
+                          ? 'bg-primary/20 text-primary border border-primary/30'
+                          : locked
+                            ? 'border border-white/5 opacity-40 cursor-not-allowed'
+                            : 'border border-white/5 hover:border-white/15 hover:bg-white/5 text-muted-foreground'
+                      }`}
+                    >
+                      {freq.label.replace('Every ', '')}
+                      {locked && (
+                        <span className="absolute -top-1.5 -right-1.5 text-[8px] text-primary-foreground font-medium px-1 py-0.5 rounded-full bg-primary leading-none">
+                          PRO
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
           {(monitor.selector || editingSelector) && (
             <div>
@@ -358,36 +435,72 @@ export function MonitorDetail({
             </div>
           )}
           <Separator />
-          <div className="flex justify-between items-center">
-            <span className="text-muted-foreground flex items-center gap-1.5">
-              <Share2 className="h-3.5 w-3.5" />
-              Shareable links
-            </span>
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  const res = await fetch(`/api/monitors/${monitor.id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ shareEnabled: !monitor.shareEnabled }),
-                  });
-                  if (!res.ok) throw new Error();
-                  toast.success(monitor.shareEnabled ? 'Sharing disabled' : 'Sharing enabled');
-                  router.refresh();
-                } catch {
-                  toast.error('Failed to update sharing');
-                }
-              }}
-              className={`text-xs px-2.5 py-1 rounded-full transition-all cursor-pointer ${
-                monitor.shareEnabled
-                  ? 'bg-primary/20 text-primary hover:bg-primary/30'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-              }`}
-              title={monitor.shareEnabled ? 'Click to disable sharing' : 'Click to enable shareable links for changes'}
-            >
-              {monitor.shareEnabled ? 'On' : 'Off'}
-            </button>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <Share2 className="h-3.5 w-3.5" />
+                Shareable links
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={monitor.shareEnabled}
+                disabled={sharingLoading}
+                onClick={async () => {
+                  setSharingLoading(true);
+                  try {
+                    const res = await fetch(`/api/monitors/${monitor.id}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ shareEnabled: !monitor.shareEnabled }),
+                    });
+                    if (!res.ok) throw new Error();
+                    toast.success(monitor.shareEnabled ? 'Sharing disabled' : 'Sharing enabled');
+                    router.refresh();
+                  } catch {
+                    toast.error('Failed to update sharing');
+                  } finally {
+                    setSharingLoading(false);
+                  }
+                }}
+                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                  monitor.shareEnabled ? 'bg-primary' : 'bg-white/15'
+                } ${sharingLoading ? 'opacity-50' : 'cursor-pointer'}`}
+              >
+                <span
+                  className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${
+                    monitor.shareEnabled ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                  }`}
+                />
+              </button>
+            </div>
+            {monitor.shareEnabled && changes.some((c) => c.shareToken) && (
+              <div className="flex items-center gap-2">
+                <code className="text-[11px] text-muted-foreground/70 truncate flex-1">
+                  {`${typeof window !== 'undefined' ? window.location.origin : ''}/changes/${changes.find((c) => c.shareToken)?.shareToken}`}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const token = changes.find((c) => c.shareToken)?.shareToken;
+                    if (token) {
+                      const shareUrl = `${window.location.origin}/changes/${token}`;
+                      navigator.clipboard.writeText(shareUrl);
+                      toast.success('Share link copied!');
+                    }
+                  }}
+                  className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors shrink-0"
+                >
+                  <Copy className="h-3 w-3" />
+                  Copy
+                </button>
+              </div>
+            )}
+            {monitor.shareEnabled && !changes.some((c) => c.shareToken) && (
+              <p className="text-[11px] text-muted-foreground/50">
+                Share links will appear here after the first detected change.
+              </p>
+            )}
           </div>
           <Separator />
           <div className="flex justify-between">
