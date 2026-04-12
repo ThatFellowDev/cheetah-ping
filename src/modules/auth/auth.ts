@@ -11,6 +11,10 @@ export const auth = betterAuth({
   }),
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
+  trustedOrigins: [
+    'https://cheetahping.com',
+    'https://www.cheetahping.com',
+  ],
   user: {
     additionalFields: {
       stripeCustomerId: {
@@ -24,12 +28,20 @@ export const auth = betterAuth({
       },
     },
   },
+  // Better Auth built-in rate limiting (defense in depth with our Upstash layer)
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 20,
+    customRules: {
+      '/api/auth/magic-link/sign-in': { window: 60, max: 3 },
+      '/api/auth/sign-in/email': { window: 60, max: 5 },
+    },
+  },
   plugins: [
     magicLink({
       expiresIn: 300, // 5 minutes
       sendMagicLink: async ({ email, url }) => {
-        // In production, this sends via Resend
-        // For local dev, logs to console
         if (process.env.RESEND_API_KEY) {
           const { Resend } = await import('resend');
           const resend = new Resend(process.env.RESEND_API_KEY);
@@ -59,6 +71,7 @@ export const auth = betterAuth({
   ],
   session: {
     expiresIn: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60, // refresh session token every 24 hours
     cookieCache: {
       enabled: true,
       maxAge: 5 * 60, // 5 min cache
@@ -70,6 +83,9 @@ export const auth = betterAuth({
       httpOnly: true,
       sameSite: 'lax' as const,
       secure: process.env.NODE_ENV === 'production',
+    },
+    ipAddress: {
+      ipAddressHeaders: ['x-forwarded-for', 'x-real-ip'],
     },
   },
 });
