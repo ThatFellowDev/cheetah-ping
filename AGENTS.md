@@ -44,6 +44,67 @@ Before reaching for external infra (crons, GitHub Actions, Zapier, third-party s
 
 These are cheap, fast questions. Ask them every time before shipping. They are the difference between patching symptoms and actually solving problems, and between suggesting external plumbing and recognising the product you already built. The worked examples above are not hypothetical. They are real misses from this project's session history and are the pattern-match hooks to avoid repeating them.
 
+# Security-first development (mandatory)
+
+Every feature, endpoint, and data flow must pass these checks before shipping. These rules exist because every one of them was violated during this project's development and caught in audit.
+
+## URL handling: SSRF is the default
+
+Any code path that fetches a user-supplied URL is an SSRF vector. This includes monitor creation, AI analysis, proxy preview, screenshot capture, and Workers cron fetch.
+
+- **Always call `isSafeUrl(url)` before any fetch.** This function lives in `src/lib/validate-url.ts` (Next.js) and `workers/src/validate-url.ts` (Workers). It blocks localhost, private IPs (10.x, 172.x, 192.168.x), link-local, and cloud metadata endpoints.
+- **Validate at creation AND at fetch time.** Belt and suspenders. The URL is checked when the user submits it and again when the system fetches it.
+- **Both codebases must be in sync.** If you add a blocked pattern to the Next.js validator, add it to the Workers one too.
+
+*Why:* An attacker who creates a monitor for `http://169.254.169.254/` gets your cloud metadata. An attacker who monitors `http://10.0.0.1/admin` scans your internal network. Both were possible before the audit.
+
+## User input in HTML: escape everything
+
+Never interpolate user-supplied strings (URLs, labels, names, selectors) into HTML templates without escaping. This applies to email templates, proxy page rendering, and any server-rendered HTML.
+
+- **Use `escapeHtml()` for email templates** in `workers/src/index.ts`. The function exists at line 9. Use it on every `monitor.url`, `monitor.label`, and any other user string in email HTML.
+- **The proxy route already strips scripts and neutralizes forms.** Do not weaken that sanitization.
+
+*Why:* Monitor URLs went into email `<a href="">` tags unescaped. A URL containing a double-quote could break the attribute and inject HTML into alert emails.
+
+## API routes: auth + ownership + rate limiting
+
+Every API route that touches user data must check three things:
+
+1. **Authentication:** `auth.api.getSession()` at the top.
+2. **Ownership:** WHERE clauses must include `eq(table.userId, session.user.id)` on BOTH the read query AND the write query. Do not query by ID alone and assume the pre-check is sufficient.
+3. **Rate limiting:** Every endpoint that triggers external calls (AI, Browserless, email) or expensive DB operations must call `rateLimit()`. Use per-user identifiers (`session.user.id`) for authenticated endpoints, per-IP for public ones.
+
+*Why:* Pause/resume routes had ownership checks on the SELECT but not on the UPDATE. The AI analysis endpoint used IP-based rate limiting, so one user could exhaust the limit for everyone on the same network.
+
+## Error messages: never leak internals
+
+API error responses must use generic messages. Log the real error server-side with `console.error()`.
+
+- **Bad:** `{ error: "Couldn't reach page: ECONNREFUSED 10.0.0.1:3000" }`
+- **Good:** `{ error: "Unable to reach that page. Please check the URL and try again." }`
+
+*Why:* Detailed errors revealed internal DNS failures, SSL certificate details, Browserless API errors, and network topology to any authenticated user probing URLs through the API.
+
+## Cookies and consent
+
+- **Essential cookies (session) need no consent.** Set httpOnly, Secure, SameSite=lax.
+- **Non-essential cookies (attribution, analytics) require consent.** Check `localStorage.getItem('cp_cookie_consent') === 'accepted'` before setting them.
+- **PostHog must not initialize before consent.** The provider in `posthog-provider.tsx` gates on consent state.
+- **Never change the Better Auth cookie prefix.** Changing it logs out every user. The default `better-auth` prefix is permanent.
+
+## Privacy policy as code contract
+
+The privacy policy at `src/app/privacy/page.tsx` is a legal document that must accurately describe what the code does. When you add a new third-party service, a new cookie, or a new data flow, update the privacy policy in the same commit. Treat it like a type definition: if the code and the policy disagree, one of them is a bug.
+
+## Third-party data flows
+
+Every external service that receives user data must be listed in the privacy policy. Current list: Stripe, Resend, Groq, PostHog, Cloudflare (Turnstile + R2 + Workers), Browserless, Neon, Vercel. Adding a new service without updating the policy is a compliance violation.
+
+## Data retention
+
+Change logs are automatically purged by the Vercel cron at `/api/cron/retention` (daily, 4 AM UTC). Plan limits: Free 7 days, Starter 30, Pro 90, Ultra 180. If you change plan limits in `plan-limits.ts`, the retention cron automatically adjusts. Never promise a retention period the code doesn't enforce.
+
 # Writing style
 
 - **No em-dashes in user-facing copy.** UI strings, marketing text, page titles, alert summaries, button labels, tooltips, and placeholder examples use periods, commas, colons, or pipes instead. Em-dashes are a classic AI-writing tell and the product's voice should read as authentically human.
