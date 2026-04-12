@@ -15,8 +15,18 @@ import { Mail, ArrowLeft } from 'lucide-react';
 const TURNSTILE_SITE_KEY = process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY : undefined;
 
 function isValidCallbackURL(url: string): boolean {
-  // Only allow same-origin relative paths
-  return url.startsWith('/') && !url.startsWith('//');
+  // Only allow safe same-origin relative paths
+  if (!url.startsWith('/') || url.startsWith('//')) return false;
+  // Block protocol-relative and backslash tricks (/\/\/evil.com, /\evil.com)
+  if (/[\\]/.test(url)) return false;
+  // Verify it resolves to same origin via URL constructor
+  try {
+    const resolved = new URL(url, 'https://cheetahping.com');
+    if (resolved.origin !== 'https://cheetahping.com') return false;
+  } catch {
+    return false;
+  }
+  return true;
 }
 
 export default function LoginPage() {
@@ -36,6 +46,7 @@ function LoginForm() {
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
   const turnstileRef = useRef<TurnstileInstance>(null);
 
@@ -172,6 +183,25 @@ function LoginForm() {
               </div>
             )}
 
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50 shrink-0"
+              />
+              <span className="text-xs text-muted-foreground leading-relaxed">
+                I agree to the{' '}
+                <Link href="/terms" className="text-foreground hover:text-primary underline underline-offset-2 transition-colors">
+                  Terms of Service
+                </Link>{' '}
+                and{' '}
+                <Link href="/privacy" className="text-foreground hover:text-primary underline underline-offset-2 transition-colors">
+                  Privacy Policy
+                </Link>.
+              </span>
+            </label>
+
             {error && (
               <p className="text-sm text-destructive">{error}</p>
             )}
@@ -179,21 +209,10 @@ function LoginForm() {
             <GlowButton
               type="submit"
               className="w-full h-11 text-base"
-              disabled={loading || (!!TURNSTILE_SITE_KEY && !turnstileToken)}
+              disabled={loading || !termsAccepted || (!!TURNSTILE_SITE_KEY && !turnstileToken)}
             >
               {loading ? 'Sending link...' : 'Continue with email'}
             </GlowButton>
-
-            <p className="text-xs text-muted-foreground text-center leading-relaxed">
-              By continuing, you agree to our{' '}
-              <Link href="/terms" className="text-foreground hover:text-primary underline underline-offset-2 transition-colors">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link href="/privacy" className="text-foreground hover:text-primary underline underline-offset-2 transition-colors">
-                Privacy Policy
-              </Link>.
-            </p>
           </form>
         </CardContent>
       </Card>

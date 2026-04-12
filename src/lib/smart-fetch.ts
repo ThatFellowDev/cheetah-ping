@@ -32,6 +32,12 @@ async function browserlessFetch(url: string, browserlessUrl: string, browserless
 }
 
 export async function smartFetch(url: string): Promise<string> {
+  // SSRF check: validate URL before any fetch (including Browserless fallback)
+  const { isSafeUrl } = await import('./validate-url');
+  if (!isSafeUrl(url)) {
+    throw new Error('URL not allowed: blocked by SSRF protection');
+  }
+
   const browserlessUrl = process.env.BROWSERLESS_URL;
   const browserlessToken = process.env.BROWSERLESS_TOKEN;
 

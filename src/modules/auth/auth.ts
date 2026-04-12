@@ -26,6 +26,7 @@ export const auth = betterAuth({
   },
   plugins: [
     magicLink({
+      expiresIn: 300, // 5 minutes
       sendMagicLink: async ({ email, url }) => {
         // In production, this sends via Resend
         // For local dev, logs to console
@@ -58,5 +59,18 @@ export const auth = betterAuth({
   ],
   session: {
     expiresIn: 30 * 24 * 60 * 60, // 30 days
+    cookieCache: {
+      enabled: true,
+      maxAge: 5 * 60, // 5 min cache
+    },
+  },
+  advanced: {
+    cookiePrefix: 'cp',
+    useSecureCookies: process.env.NODE_ENV === 'production',
+    defaultCookieAttributes: {
+      httpOnly: true,
+      sameSite: 'lax' as const,
+      secure: process.env.NODE_ENV === 'production',
+    },
   },
 });
