@@ -3,6 +3,7 @@ import { Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { PostHogProvider } from "@/shared/analytics/posthog-provider";
+import { CookieBanner } from "@/shared/components/consent/cookie-banner";
 import "./globals.css";
 
 const geistMono = Geist_Mono({
@@ -129,6 +130,7 @@ export default function RootLayout({
         <PostHogProvider>
           {children}
         </PostHogProvider>
+        <CookieBanner />
         <Toaster richColors position="bottom-right" />
         <SpeedInsights />
       </body>

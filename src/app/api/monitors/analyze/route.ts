@@ -12,13 +12,14 @@ const VALID_WATCH_MODES = ['page', 'keyword', 'selector'] as const;
 type WatchMode = (typeof VALID_WATCH_MODES)[number];
 
 export async function POST(request: NextRequest) {
-  const rateLimited = await rateLimit(request);
-  if (rateLimited) return rateLimited;
-
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // Per-user rate limiting (5 AI analyses per minute)
+  const rateLimited = await rateLimit(request, { identifier: session.user.id });
+  if (rateLimited) return rateLimited;
 
   const { url, intent } = await request.json();
   if (!url || typeof url !== 'string') {
