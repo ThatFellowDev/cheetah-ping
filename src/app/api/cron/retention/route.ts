@@ -3,6 +3,7 @@ import { db } from '@/shared/database/db';
 import { user, monitors, changeLog } from '@/shared/database/schema';
 import { eq, lt, and, inArray } from 'drizzle-orm';
 import { PLAN_LIMITS } from '@/lib/plan-limits';
+import { timingSafeEqual } from 'crypto';
 
 async function runRetention() {
   let totalDeleted = 0;
@@ -46,30 +47,21 @@ async function runRetention() {
 
 function authorize(request: NextRequest): boolean {
   const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) return true; // no secret = dev mode, allow
+  if (!cronSecret) return true; // no secret = dev mode
 
-  // Vercel Crons send the secret in the Authorization header
-  const authHeader = request.headers.get('authorization');
-  return authHeader === `Bearer ${cronSecret}`;
-}
+  const authHeader = request.headers.get('authorization') || '';
+  const expected = `Bearer ${cronSecret}`;
 
-// Vercel Cron calls GET
-export async function GET(request: NextRequest) {
-  if (!authorize(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Constant-time comparison to prevent timing attacks
+  try {
+    return timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected));
+  } catch {
+    return false;
   }
-
-  const deleted = await runRetention();
-
-  return NextResponse.json({
-    success: true,
-    deleted,
-    timestamp: new Date().toISOString(),
-  });
 }
 
-// Also support POST for manual triggers
-export async function POST(request: NextRequest) {
+// Vercel Cron calls GET only
+export async function GET(request: NextRequest) {
   if (!authorize(request)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }

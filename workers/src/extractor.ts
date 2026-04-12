@@ -18,6 +18,11 @@ export function extractContent(html: string, selector?: string | null): string {
   ).remove();
 
   if (selector) {
+    // Guard against ReDoS: limit selector length and nesting depth
+    if (selector.length > 200) return '';
+    const hasNesting = (selector.match(/:has\(/g) || []).length;
+    if (hasNesting > 3) return '';
+
     const element = $(selector);
     if (element.length === 0) return '';
     return element.text().replace(/\s+/g, ' ').trim();

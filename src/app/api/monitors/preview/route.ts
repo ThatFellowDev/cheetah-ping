@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     html = await smartFetch(url);
   } catch (err) {
     return NextResponse.json(
-      { error: `Couldn't reach that page: ${err instanceof Error ? err.message : 'Unknown error'}` },
+      { error: 'Unable to reach that page. Please check the URL and try again.' },
       { status: 400 }
     );
   }

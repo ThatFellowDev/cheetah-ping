@@ -1,15 +1,20 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/modules/auth/auth';
 import { db } from '@/shared/database/db';
 import { user, monitors, changeLog, session } from '@/shared/database/schema';
 import { eq } from 'drizzle-orm';
 import { headers } from 'next/headers';
+import { rateLimit } from '@/lib/rate-limit';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const authSession = await auth.api.getSession({ headers: await headers() });
   if (!authSession?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // 1 export per minute per user
+  const rateLimited = await rateLimit(request, { identifier: authSession.user.id, limit: 1, window: '1 m' });
+  if (rateLimited) return rateLimited;
 
   const userId = authSession.user.id;
 

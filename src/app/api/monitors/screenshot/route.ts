@@ -58,10 +58,9 @@ export async function POST(request: NextRequest) {
     const screenshotUrl = await uploadToR2(key, buffer, 'image/png');
     return NextResponse.json({ data: { screenshotUrl } });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[screenshot] failed:', message);
+    console.error('[screenshot] failed:', err instanceof Error ? err.message : err);
     return NextResponse.json(
-      { error: `Couldn't capture a screenshot: ${message}` },
+      { error: 'Unable to capture a screenshot. Please try again.' },
       { status: 502 },
     );
   }

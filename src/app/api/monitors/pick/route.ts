@@ -238,10 +238,9 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('[pick] failed:', message);
+    console.error('[pick] failed:', err instanceof Error ? err.message : err);
     return NextResponse.json(
-      { error: `Couldn't load the page picker: ${message}` },
+      { error: 'Unable to load the page picker. Please try again.' },
       { status: 502 },
     );
   }

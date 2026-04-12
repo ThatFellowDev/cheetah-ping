@@ -30,7 +30,7 @@ export async function POST(
       consecutiveErrors: 0,
       errorMessage: null,
     })
-    .where(eq(monitors.id, id))
+    .where(and(eq(monitors.id, id), eq(monitors.userId, session.user.id)))
     .returning();
 
   return NextResponse.json({ data: updated });

@@ -200,11 +200,11 @@ export const PICKER_SCRIPT = `
       selector: sel,
       tagName: e.target.tagName.toLowerCase(),
       textPreview: text
-    }, '*');
+    }, window.location.origin);
   }, true);
 
   // Signal ready
-  window.parent.postMessage({ type: 'PICKER_READY' }, '*');
+  window.parent.postMessage({ type: 'PICKER_READY' }, window.location.origin);
 })();
 </script>
 `;

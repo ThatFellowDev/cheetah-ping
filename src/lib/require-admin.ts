@@ -11,7 +11,7 @@ export async function requireAdmin() {
     where: eq(user.id, authUser.userId),
   });
 
-  if (!(userData as any)?.isAdmin) {
+  if (!userData || userData.isAdmin !== true) {
     redirect('/dashboard');
   }
 

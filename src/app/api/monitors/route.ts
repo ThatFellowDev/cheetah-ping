@@ -6,6 +6,7 @@ import { auth } from '@/modules/auth/auth';
 import { createMonitorSchema } from '@/modules/monitoring/lib/schemas';
 import { PLAN_LIMITS, type Plan } from '@/lib/plan-limits';
 import { rateLimit } from '@/lib/rate-limit';
+import { isSafeUrl } from '@/lib/validate-url';
 import { headers } from 'next/headers';
 
 async function getUser(request: NextRequest) {
@@ -46,6 +47,13 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: 'Invalid input', details: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  if (!isSafeUrl(parsed.data.url)) {
+    return NextResponse.json(
+      { error: 'This URL is not allowed. Internal and private network addresses are blocked.' },
       { status: 400 }
     );
   }

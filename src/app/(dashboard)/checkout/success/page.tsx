@@ -14,7 +14,9 @@ export default function CheckoutSuccessPage() {
     if (fired.current) return;
     fired.current = true;
 
-    const plan = searchParams.get('plan') ?? 'unknown';
+    const validPlans = ['free', 'starter', 'pro', 'ultra'];
+    const rawPlan = searchParams.get('plan') ?? '';
+    const plan = validPlans.includes(rawPlan) ? rawPlan : 'unknown';
 
     if (process.env.NEXT_PUBLIC_POSTHOG_KEY) {
       posthog.capture(ANALYTICS_EVENTS.SUBSCRIPTION_ACTIVATED, {

@@ -5,6 +5,7 @@ import { sendEmail } from './email';
 import { sendSlackNotification, sendDiscordNotification } from './notify';
 import { generateAiSummary } from './ai-summary';
 import { takeScreenshot, screenshotContentType } from './screenshot';
+import { isSafeUrl } from './validate-url';
 
 function escapeHtml(text: string): string {
   return text
@@ -52,6 +53,10 @@ async function browserlessFetch(url: string, env: Env): Promise<string> {
 }
 
 async function smartFetch(url: string, env: Env): Promise<string> {
+  if (!isSafeUrl(url)) {
+    throw new Error('URL blocked by SSRF protection');
+  }
+
   // Try plain fetch first (free, fast)
   try {
     const res = await fetch(url, {
@@ -255,7 +260,8 @@ async function checkMonitor(sql: postgres.Sql, env: Env, monitor: Monitor) {
       )
     `;
 
-    const label = monitor.label || monitor.url;
+    const label = escapeHtml(monitor.label || monitor.url);
+    const safeUrl = escapeHtml(monitor.url);
     const historyUrl = `${env.APP_URL}/monitors/${monitor.id}`;
     const shareUrl = `${env.APP_URL}/changes/${shareToken}`;
 
@@ -297,7 +303,7 @@ async function checkMonitor(sql: postgres.Sql, env: Env, monitor: Monitor) {
         ${aiSummary && summary !== aiSummary ? `<p style="color:#999;font-size:12px;">Raw diff: ${escapeHtml(summary)}</p>` : ''}
         ${screenshotBlock}
         <p>
-          <a href="${monitor.url}" style="display:inline-block;padding:10px 20px;background:#18181b;color:#fff;text-decoration:none;border-radius:6px;">
+          <a href="${safeUrl}" style="display:inline-block;padding:10px 20px;background:#18181b;color:#fff;text-decoration:none;border-radius:6px;">
             View the page
           </a>
         </p>
@@ -414,7 +420,7 @@ async function handleFetchError(
       subject: `Your monitor "${monitor.label || monitor.url}" has been paused`,
       html: `
         <h2>Monitor Auto-Paused</h2>
-        <p>Your monitor for <strong>${monitor.label || monitor.url}</strong> has been paused after 3 consecutive errors.</p>
+        <p>Your monitor for <strong>${escapeHtml(monitor.label || monitor.url)}</strong> has been paused after 3 consecutive errors.</p>
         <p><strong>Last error:</strong> ${escapeHtml(errorMsg)}</p>
         <p>You can resume it from your <a href="${env.APP_URL}/monitors/${monitor.id}">dashboard</a>.</p>
       `,

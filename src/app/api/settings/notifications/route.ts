@@ -35,9 +35,20 @@ export async function PATCH(request: NextRequest) {
   const body = await request.json();
 
   // Allow empty strings to clear webhook URLs
+  // Strip query params/fragments from webhook URLs to prevent injection
+  function sanitizeWebhookUrl(url: string | null): string | null {
+    if (!url) return null;
+    try {
+      const parsed = new URL(url);
+      return parsed.origin + parsed.pathname;
+    } catch {
+      return null;
+    }
+  }
+
   const cleaned = {
-    slackWebhookUrl: body.slackWebhookUrl || null,
-    discordWebhookUrl: body.discordWebhookUrl || null,
+    slackWebhookUrl: sanitizeWebhookUrl(body.slackWebhookUrl),
+    discordWebhookUrl: sanitizeWebhookUrl(body.discordWebhookUrl),
   };
 
   // Only validate non-null URLs

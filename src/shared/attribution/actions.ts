@@ -7,6 +7,11 @@ import { eq } from 'drizzle-orm';
 import { headers } from 'next/headers';
 
 export async function syncAttribution(source: string): Promise<{ synced: boolean }> {
+  // Sanitize: only allow safe characters to prevent stored XSS
+  if (!/^[a-zA-Z0-9_.-]+$/.test(source) || source.length > 100) {
+    return { synced: false };
+  }
+
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session?.user?.id) return { synced: false };
 

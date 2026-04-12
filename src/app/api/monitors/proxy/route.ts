@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
     }
   } catch (err) {
     return new Response(
-      errorPage(`Couldn't reach the page: ${err instanceof Error ? err.message : 'Unknown error'}`),
+      errorPage('Unable to load this page. Please check the URL and try again.'),
       { status: 400, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
     );
   }

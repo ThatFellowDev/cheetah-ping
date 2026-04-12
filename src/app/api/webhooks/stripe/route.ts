@@ -6,6 +6,10 @@ import { eq } from 'drizzle-orm';
 import { handleDowngrade } from '@/modules/billing/downgrade';
 import type Stripe from 'stripe';
 
+// Simple in-memory idempotency (survives within a single instance lifecycle)
+const processedEvents = new Set<string>();
+const MAX_PROCESSED = 1000;
+
 export async function POST(request: NextRequest) {
   const stripe = getStripe();
   if (!stripe) {
@@ -28,6 +32,16 @@ export async function POST(request: NextRequest) {
     );
   } catch {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+  }
+
+  // Idempotency: skip already-processed events
+  if (processedEvents.has(event.id)) {
+    return NextResponse.json({ received: true, skipped: true });
+  }
+  processedEvents.add(event.id);
+  if (processedEvents.size > MAX_PROCESSED) {
+    const first = processedEvents.values().next().value;
+    if (first) processedEvents.delete(first);
   }
 
   switch (event.type) {

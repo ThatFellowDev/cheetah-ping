@@ -85,7 +85,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  await db.delete(monitors).where(eq(monitors.id, id));
+  await db.delete(monitors).where(and(eq(monitors.id, id), eq(monitors.userId, authUser.id)));
 
   return NextResponse.json({ data: { success: true } });
 }
