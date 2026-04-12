@@ -41,6 +41,9 @@ async function browserlessFetch(url: string, env: Env): Promise<string> {
     body: JSON.stringify({
       url,
       gotoOptions: { waitUntil: 'networkidle2', timeout: 20_000 },
+      // Force English locale so sites don't serve Finnish content based on
+      // the Hetzner Helsinki VPS geo-IP.
+      setExtraHTTPHeaders: { 'Accept-Language': 'en-US,en;q=0.9' },
     }),
     signal: AbortSignal.timeout(30_000),
   });
@@ -53,7 +56,10 @@ async function smartFetch(url: string, env: Env): Promise<string> {
   try {
     const res = await fetch(url, {
       signal: AbortSignal.timeout(10_000),
-      headers: { 'User-Agent': 'CheetahPing/1.0 (https://cheetahping.com)' },
+      headers: {
+        'User-Agent': 'CheetahPing/1.0 (https://cheetahping.com)',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
       redirect: 'follow',
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);

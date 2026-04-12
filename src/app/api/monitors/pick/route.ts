@@ -41,6 +41,9 @@ const VIEWPORT = { width: 1280, height: 800 };
 const ELEMENT_EXTRACTION_FUNCTION = `
 export default async function ({ page, context }) {
   await page.setViewport({ width: ${VIEWPORT.width}, height: ${VIEWPORT.height} });
+  // Force English locale so sites don't serve Finnish content based on
+  // the Hetzner Helsinki VPS geo-IP.
+  await page.setExtraHTTPHeaders({ 'Accept-Language': 'en-US,en;q=0.9' });
   await page.goto(context.url, { waitUntil: 'networkidle2', timeout: 25000 });
 
   // Scroll through the page in steps to trigger intersection-observer and

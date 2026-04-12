@@ -40,6 +40,9 @@ export async function takeScreenshot(
     },
     viewport: opts.viewport ?? DEFAULT_VIEWPORT,
     gotoOptions: { waitUntil: 'networkidle2', timeout: 20_000 },
+    // Force English locale so sites don't serve Finnish content based on
+    // the Hetzner Helsinki VPS geo-IP.
+    setExtraHTTPHeaders: { 'Accept-Language': 'en-US,en;q=0.9' },
   };
 
   const endpoint = `${env.BROWSERLESS_URL}/chrome/screenshot?token=${env.BROWSERLESS_TOKEN}`;
