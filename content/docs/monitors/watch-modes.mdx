@@ -1,0 +1,41 @@
+---
+title: Watch Modes
+description: Choose between page, keyword, and selector monitoring.
+---
+
+Cheetah Ping offers three watch modes. Each one determines what part of the page is tracked for changes.
+
+## Page mode
+
+Monitors the entire page content. You get alerted whenever any visible text on the page changes.
+
+**Best for:**
+- Blog posts and articles
+- Terms of service or legal pages
+- Landing pages you want to keep an eye on
+
+**Note:** Page mode ignores ads, scripts, and other non-content elements. It focuses on the meaningful text content.
+
+## Keyword mode
+
+Watches for a specific keyword or phrase to appear or disappear from the page.
+
+**Best for:**
+- Waiting for "in stock" to appear on a product page
+- Watching for a specific job title on a careers page
+- Monitoring for a price like "$99" to show up
+
+**How it works:** each check scans the page text for your keyword. You get alerted when the keyword is found (or stops being found), depending on your configuration.
+
+## Selector mode
+
+Tracks only a specific element on the page, identified by a CSS selector.
+
+**Best for:**
+- Price elements (e.g., `.product-price`)
+- Specific sections of a page (e.g., `#availability`)
+- Data tables or structured content
+
+**How it works:** each check extracts the text content of the matched element and compares it to the previous snapshot. Changes elsewhere on the page are ignored.
+
+For help choosing the right CSS selector, see the [Selectors guide](/docs/monitors/selectors).

@@ -1,0 +1,56 @@
+---
+title: Alerts and Notifications
+description: How Cheetah Ping notifies you when changes are detected.
+---
+
+When Cheetah Ping detects a change on a monitored page, it sends you an alert through your configured notification channels.
+
+## Email alerts
+
+Email is the default notification channel. Every account gets email alerts at no extra cost. Each alert email includes:
+
+- The monitor name and URL
+- A summary of what changed
+- A visual diff showing the before and after
+- A link to view the full change log
+
+## Webhook notifications
+
+You can also receive alerts via webhooks, which integrate with Slack, Discord, and other services.
+
+### Slack
+
+To set up Slack notifications:
+1. Go to **Settings** in your Cheetah Ping dashboard
+2. Add a Slack incoming webhook URL
+3. Alerts will be posted to the channel associated with that webhook
+
+### Discord
+
+Discord also supports incoming webhooks:
+1. In your Discord server, go to **Channel Settings** > **Integrations** > **Webhooks**
+2. Create a new webhook and copy the URL
+3. Paste it in your Cheetah Ping notification settings
+
+### Custom webhooks
+
+You can use any URL that accepts POST requests. Cheetah Ping sends a JSON payload with the monitor details and change summary.
+
+## Notification settings
+
+Configure your notification preferences from the **Settings** page in the dashboard. You can:
+
+- Enable or disable email alerts
+- Add or remove webhook URLs
+- Test your notification setup with a test alert
+
+## Change history
+
+Every detected change is logged with a timestamp, diff, and optional AI summary. View your change history from the monitor detail page. History retention depends on your plan:
+
+| Plan | History retention |
+|------|------------------|
+| Free | 7 days |
+| Starter | 30 days |
+| Pro | 90 days |
+| Ultra | 180 days |

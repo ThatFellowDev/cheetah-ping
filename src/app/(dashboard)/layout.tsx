@@ -6,6 +6,7 @@ import { requireAuth } from '@/lib/require-auth';
 import { LogoutButton } from './logout-button';
 import { AnalyticsIdentify } from '@/shared/analytics/identify';
 import { SyncAttribution } from '@/shared/attribution/sync-attribution';
+import { SiteFooter } from '@/shared/components/site-footer';
 
 export default async function DashboardLayout({
   children,
@@ -21,7 +22,7 @@ export default async function DashboardLayout({
   const isAdmin = (userData as any)?.isAdmin === true;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-50 glass border-b border-white/5">
         <div className="mx-auto max-w-5xl flex items-center justify-between px-4 h-14">
           <div className="flex items-center gap-2 sm:gap-6">
@@ -41,6 +42,12 @@ export default async function DashboardLayout({
               >
                 Settings
               </Link>
+              <Link
+                href="/docs"
+                className="text-muted-foreground hover:text-foreground hover:bg-white/5 px-2 sm:px-3 py-1.5 rounded-lg transition-all duration-200 hidden sm:block"
+              >
+                Docs
+              </Link>
               {isAdmin && (
                 <Link
                   href="/admin"
@@ -57,7 +64,8 @@ export default async function DashboardLayout({
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-5xl px-4 py-8 flex-1">{children}</main>
+      <SiteFooter />
       <AnalyticsIdentify />
       <SyncAttribution />
     </div>

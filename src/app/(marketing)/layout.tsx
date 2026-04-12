@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { LinkButton } from '@/shared/components/link-button';
 import { CaptureAttribution } from '@/shared/attribution/capture-attribution';
+import { SiteFooter } from '@/shared/components/site-footer';
 
 export default function MarketingLayout({
   children,
@@ -40,19 +41,7 @@ export default function MarketingLayout({
         <CaptureAttribution />
       </Suspense>
       {children}
-      <footer className="border-t border-white/5 py-8 mt-16">
-        <div className="mx-auto max-w-5xl px-4 flex items-center justify-between text-sm text-muted-foreground">
-          <span className="gradient-text font-heading font-semibold">Cheetah Ping</span>
-          <div className="flex items-center gap-4">
-            <Link href="/privacy" className="hover:text-foreground transition-colors">
-              Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-foreground transition-colors">
-              Terms
-            </Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

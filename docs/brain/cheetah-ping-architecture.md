@@ -6,6 +6,15 @@ Cheetah Ping is a B2C consumer website change monitor. Users paste a URL, pick w
 
 **No organizations. No RBAC. No multi-tenancy.** Every query scoped by `userId` from session.
 
+### Documentation & AI Chat
+
+- **Fumadocs** powers the `/docs` site (MDX content in `content/docs/`, rendered via `src/app/(docs)/`)
+- **AI Chat Assistant** floating widget on all pages, powered by Groq (`llama-4-scout-17b-16e-instruct`)
+  - Endpoint: `POST /api/chat` (streaming via Vercel AI SDK v6)
+  - Context: all doc pages concatenated into system prompt (context stuffing)
+  - Rate limits: 20 msgs/min authenticated, 5 msgs/min anonymous
+  - Graceful degradation when `GROQ_API_KEY` is missing
+
 ---
 
 ## Data Model (Drizzle Schema)
@@ -92,17 +101,19 @@ export const sessions = pgTable('sessions', {
 
 | Plan | Price | Monitors | Check Frequency | Change History |
 |------|-------|----------|----------------|----------------|
-| Free | $0 | 2 | Every 24 hours | 7 days |
+| Free | $0 | 5 | Every 24 hours | 7 days |
 | Starter | $9/mo | 10 | Every 15 minutes | 30 days |
 | Pro | $19/mo | 50 | Every 5 minutes | 90 days |
+| Ultra | $49/mo | 50 | Every minute | 180 days |
 
 ### Enforcement Rules
 
 ```typescript
 const PLAN_LIMITS = {
-  free:    { maxMonitors: 2,  minIntervalMinutes: 1440, historyDays: 7 },
+  free:    { maxMonitors: 5,  minIntervalMinutes: 1440, historyDays: 7 },
   starter: { maxMonitors: 10, minIntervalMinutes: 15,   historyDays: 30 },
   pro:     { maxMonitors: 50, minIntervalMinutes: 5,    historyDays: 90 },
+  ultra:   { maxMonitors: 50, minIntervalMinutes: 1,    historyDays: 180 },
 } as const;
 ```
 
@@ -455,6 +466,21 @@ Link in `/settings` page. Users manage their own billing via Stripe's hosted por
 | GET | `/api/monitors/[id]/changes` | Get change history | Yes (owner) |
 | POST | `/api/checkout` | Create Stripe Checkout session | Yes |
 | POST | `/api/webhooks/stripe` | Handle Stripe events | Signature verified |
+| POST | `/api/monitors/analyze` | AI analysis of URL for monitor setup | Yes |
+| POST | `/api/monitors/pick` | CSS selector suggestions | Yes |
+| POST | `/api/monitors/preview` | Preview URL content | Yes |
+| GET | `/api/monitors/proxy` | Proxy page for iframe preview | Yes |
+| POST | `/api/monitors/screenshot` | Screenshot capture via Browserless | Yes |
+| GET/POST | `/api/settings/notifications` | Notification preferences | Yes |
+| POST | `/api/settings/notifications/test` | Send test notification | Yes |
+| POST | `/api/settings/account` | Update account settings | Yes |
+| GET | `/api/settings/export` | Export user data (GDPR) | Yes |
+| POST | `/api/billing/portal` | Stripe billing portal session | Yes |
+| GET | `/api/admin/stats` | Admin dashboard stats | Admin |
+| GET/PATCH/DELETE | `/api/admin/users/[id]` | Admin user management | Admin |
+| GET | `/api/stats` | Public site stats (cached 5min) | Public |
+| POST | `/api/cron/retention` | Daily data retention purge (Vercel Cron) | Cron secret |
+| POST | `/api/chat` | AI chat assistant (streaming) | Public (rate limited) |
 | GET/POST | `/api/auth/**` | Better Auth routes | Public |
 
 **Every authenticated route:**
@@ -520,6 +546,10 @@ RESEND_API_KEY=re_...
 ```
 UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
+GROQ_API_KEY=gsk_...              # AI analysis + chat assistant
+BROWSERLESS_API_KEY=              # JS-rendered page fetching
+NEXT_PUBLIC_POSTHOG_KEY=          # Analytics (consent-gated)
+NEXT_PUBLIC_POSTHOG_HOST=         # PostHog EU endpoint
 NEXT_PUBLIC_APP_NAME=Cheetah Ping
 ```
 
@@ -528,9 +558,17 @@ NEXT_PUBLIC_APP_NAME=Cheetah Ping
 ## Additional Dependencies (not in greenfield)
 
 ```bash
-pnpm add cheerio diff inngest
-pnpm add -D @types/diff
+pnpm add cheerio diff groq-sdk                       # monitoring + AI analysis
+pnpm add fumadocs-core fumadocs-ui fumadocs-mdx       # documentation site
+pnpm add ai @ai-sdk/groq @ai-sdk/react                # AI chat assistant
+pnpm add @upstash/ratelimit @upstash/redis             # rate limiting
 ```
+
+### Documentation Stack
+
+- **Fumadocs**: MDX-based docs at `/docs`, content in `content/docs/`, source config in `source.config.ts`
+- **Vercel AI SDK v6**: `streamText()` for chat endpoint, `useChat()` hook for widget
+- **@ai-sdk/groq**: Groq provider for Llama 4 Scout model
 
 ---
 

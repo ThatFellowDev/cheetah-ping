@@ -42,6 +42,9 @@ yarn-error.log*
 # wrangler local state (build artifacts, dev server cache)
 .wrangler/
 
+# fumadocs generated types
+.source/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

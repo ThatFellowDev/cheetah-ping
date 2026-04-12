@@ -9,6 +9,14 @@
 /monitors/new        -> Create monitor: URL, optional CSS selector, optional keyword, frequency
 /monitors/[id]       -> Monitor detail: change history timeline, edit settings, pause/resume, delete
 /settings            -> Account, current plan, Stripe billing portal link
+/docs                -> Documentation site (Fumadocs, sidebar layout)
+/docs/[...slug]      -> Individual doc pages (getting-started, monitors/*, alerts, billing)
+/use-cases           -> Use case listing page
+/use-cases/[slug]    -> Individual use case pages (30+ pages)
+/admin               -> Admin dashboard (admin only)
+/admin/users/[id]    -> Admin user detail (admin only)
+/changes/[token]     -> Public shared change view (via share token)
+/checkout/success    -> Post-checkout success page
 /privacy             -> Privacy policy
 /terms               -> Terms of service
 ```
@@ -37,7 +45,7 @@
 3. Get alerted by email the moment it changes
 
 ### 4. Pricing Section
-3-column table (Free / Starter $9 / Pro $19). Highlight Starter as "Most Popular."
+4-column table (Free / Starter $9 / Pro $19 / Ultra $49). Highlight Starter as "Most Popular."
 
 ### 5. FAQ Section
 - How often does it check?
@@ -46,8 +54,12 @@
 - Can I watch for a specific word? (Yes, keyword monitoring.)
 - How fast will I get notified? (Within minutes, depending on plan.)
 
-### 6. Footer
-Minimal: links to Privacy, Terms, contact email.
+### 6. Footer (shared `SiteFooter` component)
+Two-column layout:
+- **Left**: Brand name + tagline
+- **Right**: Product links (Use Cases, Pricing, Documentation) + Legal links (Privacy Policy, Terms of Service)
+- **Bottom**: Copyright line
+- `pb-24` to clear the floating chat widget
 
 ---
 
@@ -163,31 +175,83 @@ Minimal: links to Privacy, Terms, contact email.
 
 ```
 src/app/
-  (marketing)/           # Public pages: landing, pricing
+  (marketing)/           # Public pages: landing, use cases, pricing
     page.tsx             # Landing page (/)
-    layout.tsx           # Marketing layout (no sidebar, minimal nav)
+    use-cases/           # Use case pages (listing + 30 individual pages)
+    layout.tsx           # Marketing layout (header nav, shared footer)
   (auth)/                # Auth pages
     login/page.tsx       # Login page
-    layout.tsx           # Auth layout (centered card)
   (dashboard)/           # Authenticated pages
     dashboard/page.tsx   # Monitor list
     monitors/
-      new/page.tsx       # Create monitor
+      new/page.tsx       # Create monitor (with AI analysis)
       [id]/page.tsx      # Monitor detail
     settings/page.tsx    # Account settings
-    layout.tsx           # Dashboard layout (sidebar/header nav)
+    admin/page.tsx       # Admin dashboard (admin only)
+    checkout/success/    # Post-checkout
+    layout.tsx           # Dashboard layout (header nav, shared footer)
+  (docs)/                # Documentation (Fumadocs)
+    docs/
+      layout.tsx         # DocsLayout with sidebar
+      [[...slug]]/page.tsx  # Doc page renderer
+    layout.tsx           # RootProvider + Fumadocs CSS
+    docs-theme.css       # Theme overrides for amber/dark
   api/                   # API routes
     auth/[...all]/route.ts  # Better Auth catch-all
+    chat/route.ts           # AI chat assistant (streaming)
     monitors/route.ts       # GET (list), POST (create)
     monitors/[id]/route.ts  # GET, PATCH, DELETE
     monitors/[id]/pause/route.ts
     monitors/[id]/resume/route.ts
     monitors/[id]/changes/route.ts
-    checkout/route.ts       # Stripe checkout session
-    webhooks/stripe/route.ts # Stripe webhook handler
+    monitors/analyze/route.ts  # AI URL analysis (Groq)
+    monitors/pick/route.ts     # CSS selector suggestions
+    monitors/preview/route.ts  # URL content preview
+    monitors/proxy/route.ts    # Proxy for iframe preview
+    monitors/screenshot/route.ts # Screenshot capture
+    checkout/route.ts          # Stripe checkout session
+    billing/portal/route.ts    # Stripe billing portal
+    cron/retention/route.ts    # Daily data retention purge
+    settings/                  # Notification + account settings
+    admin/                     # Admin stats + user management
+    webhooks/stripe/route.ts   # Stripe webhook handler
   privacy/page.tsx       # Privacy policy
   terms/page.tsx         # Terms of service
+  changes/[token]/page.tsx # Public shared change view
 ```
+
+### Documentation Content Structure
+
+```
+content/docs/
+  index.mdx              # Docs landing page
+  meta.json              # Sidebar ordering
+  getting-started.mdx    # Quickstart guide
+  monitors/
+    meta.json
+    index.mdx            # Monitor overview
+    watch-modes.mdx      # Page vs keyword vs selector
+    selectors.mdx        # CSS selector guide
+    frequency.mdx        # Check intervals per plan
+  alerts.mdx             # Email, Slack, Discord, webhooks
+  billing.mdx            # Plans, limits, upgrading
+```
+
+---
+
+## Global Components
+
+### AI Chat Widget (`src/shared/components/chat/chat-widget.tsx`)
+- Floating button (bottom-right) on all pages via root layout
+- Opens to full-screen overlay on mobile, 384x500px panel on desktop
+- Powered by Groq `llama-4-scout-17b-16e-instruct` via `/api/chat`
+- Uses Vercel AI SDK v6 `useChat()` hook with `DefaultChatTransport`
+- Graceful "unavailable" state when GROQ_API_KEY is missing
+
+### Site Footer (`src/shared/components/site-footer.tsx`)
+- Shared footer used by marketing and dashboard layouts
+- Product links (Use Cases, Pricing, Documentation) + Legal links
+- `pb-24` bottom padding clears the floating chat widget
 
 ---
 

@@ -14,8 +14,8 @@ export default function TermsPage() {
 
         <h2 className="text-foreground font-semibold text-lg mt-6">Agreement</h2>
         <p>
-          By creating an account or using Cheetah Ping, you agree to these Terms
-          and our <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>.
+          By creating an account or using Cheetah Ping (operated by That Fellow
+          Digital LLC), you agree to these Terms and our <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>.
           If you do not agree, do not use the service.
         </p>
 
@@ -54,7 +54,7 @@ export default function TermsPage() {
           your Settings page. Cancellation takes effect at the end of the current
           billing period. No partial refunds are issued for unused time. Refunds
           for other circumstances are handled case by case. Contact
-          support@cheetahping.com.
+          cheetahping@protonmail.com.
         </p>
 
         <h2 className="text-foreground font-semibold text-lg mt-6">Data processing</h2>
@@ -70,7 +70,7 @@ export default function TermsPage() {
           Cheetah Ping does not claim ownership of the content on pages you
           monitor. If you believe content displayed by our service infringes
           your copyright, send a DMCA takedown notice to
-          legal@cheetahping.com with: (1) the copyrighted work, (2) the
+          cheetahping@protonmail.com with: (1) the copyrighted work, (2) the
           infringing URL or content, (3) your contact information, and (4) a
           statement of good faith belief that the use is unauthorized. We will
           respond within 10 business days.
@@ -105,7 +105,7 @@ export default function TermsPage() {
 
         <h2 className="text-foreground font-semibold text-lg mt-6">Contact</h2>
         <p>
-          Questions? Email us at support@cheetahping.com.
+          Questions? Email us at cheetahping@protonmail.com.
         </p>
       </div>
     </div>

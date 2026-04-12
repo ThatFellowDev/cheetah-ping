@@ -13,9 +13,9 @@ export default function PrivacyPage() {
         <p>Last updated: April 12, 2026</p>
 
         <p>
-          Cheetah Ping (&ldquo;we,&rdquo; &ldquo;us&rdquo;) operates
-          cheetahping.com. This policy describes what data we collect, why, who
-          we share it with, and what rights you have.
+          Cheetah Ping is operated by That Fellow Digital LLC (&ldquo;we,&rdquo;
+          &ldquo;us&rdquo;). This policy describes what data we collect, why,
+          who we share it with, and what rights you have.
         </p>
 
         <h2 className="text-foreground font-semibold text-lg mt-6">What we collect</h2>
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
         <ul className="list-disc pl-5 space-y-1">
           <li><strong>Stripe</strong> (payments): receives your email and payment details. <a href="https://stripe.com/privacy" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">Stripe Privacy Policy</a>.</li>
           <li><strong>Resend</strong> (email delivery): receives your email address and alert content. <a href="https://resend.com/legal/privacy-policy" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">Resend Privacy Policy</a>.</li>
-          <li><strong>Groq</strong> (AI analysis): receives page content (HTML text) for AI-powered monitor setup and change summaries. Does not receive your email or personal details.</li>
+          <li><strong>Groq</strong> (AI analysis and chat): receives page content (HTML text) for AI-powered monitor setup and change summaries. Also processes chat messages sent to the in-app assistant. Chat messages are not stored after processing. Does not receive your email or personal details.</li>
           <li><strong>PostHog</strong> (analytics): receives anonymous usage events. EU-hosted. <a href="https://posthog.com/privacy" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">PostHog Privacy Policy</a>.</li>
           <li><strong>Cloudflare</strong> (infrastructure): DNS, Turnstile bot protection, R2 screenshot storage, and Workers for monitoring execution.</li>
           <li><strong>Browserless</strong> (page rendering): receives monitored URLs to render JavaScript-heavy pages. No user PII is sent.</li>
@@ -85,7 +85,7 @@ export default function PrivacyPage() {
           <li><strong>Portability:</strong> your data export is in JSON format, machine-readable and portable.</li>
         </ul>
         <p>
-          To exercise any right not covered above, email privacy@cheetahping.com.
+          To exercise any right not covered above, email cheetahping@protonmail.com.
           We respond within 30 days.
         </p>
 
@@ -93,7 +93,7 @@ export default function PrivacyPage() {
         <p>
           We do not sell personal information. California residents have the right
           to know what data we collect, request deletion, and opt out of any
-          future sale. To exercise these rights, email privacy@cheetahping.com.
+          future sale. To exercise these rights, email cheetahping@protonmail.com.
         </p>
 
         <h2 className="text-foreground font-semibold text-lg mt-6">Children</h2>
@@ -112,7 +112,7 @@ export default function PrivacyPage() {
 
         <h2 className="text-foreground font-semibold text-lg mt-6">Contact</h2>
         <p>
-          Questions about this policy? Email us at privacy@cheetahping.com.
+          Questions about this policy? Email us at cheetahping@protonmail.com.
         </p>
       </div>
     </div>

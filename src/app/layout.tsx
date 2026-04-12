@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { PostHogProvider } from "@/shared/analytics/posthog-provider";
 import { CookieBanner } from "@/shared/components/consent/cookie-banner";
+import { ChatWidget } from "@/shared/components/chat/chat-widget";
 import "./globals.css";
 
 const geistMono = Geist_Mono({
@@ -131,7 +132,8 @@ export default function RootLayout({
           {children}
         </PostHogProvider>
         <CookieBanner />
-        <Toaster richColors position="bottom-right" />
+        <ChatWidget />
+        <Toaster richColors position="bottom-left" />
         <SpeedInsights />
       </body>
     </html>

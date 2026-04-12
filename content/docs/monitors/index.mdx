@@ -1,0 +1,31 @@
+---
+title: Monitors
+description: How monitors work in Cheetah Ping and what you can track.
+---
+
+A monitor is the core unit of Cheetah Ping. Each monitor watches a single URL for changes and alerts you when something different is detected.
+
+## How it works
+
+1. You provide a URL and choose what to watch
+2. Cheetah Ping fetches the page on your chosen schedule
+3. Each fetch is compared against the previous snapshot
+4. If a change is detected, you get an alert with a visual diff
+
+## Monitor settings
+
+Each monitor has these configurable properties:
+
+- **Label**: a descriptive name (auto-suggested by AI, or set manually)
+- **URL**: the webpage to monitor
+- **Watch mode**: what to look for (see [Watch Modes](/docs/monitors/watch-modes))
+- **Check frequency**: how often to check (see [Frequency](/docs/monitors/frequency))
+- **Notifications**: where to send alerts (email, Slack, Discord)
+
+## AI-powered setup
+
+When you paste a URL, Cheetah Ping's AI analyzes the page and suggests the optimal configuration: a label, watch mode, CSS selector (if applicable), and check frequency. You can accept the suggestion or customize it before saving.
+
+## Pausing and resuming
+
+You can pause a monitor at any time without deleting it. Paused monitors stop checking and stop consuming your plan's monitor quota. Resume at any time to pick up where you left off.

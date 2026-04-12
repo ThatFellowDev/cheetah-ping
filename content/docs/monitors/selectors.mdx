@@ -1,0 +1,42 @@
+---
+title: CSS Selectors
+description: How to use CSS selectors to monitor specific page elements.
+---
+
+When using selector mode, you target a specific element on the page with a CSS selector. Cheetah Ping tracks only that element, ignoring everything else.
+
+## What is a CSS selector?
+
+A CSS selector is a pattern that identifies HTML elements on a page. Common examples:
+
+| Selector | What it matches |
+|----------|----------------|
+| `#price` | The element with `id="price"` |
+| `.product-title` | Elements with `class="product-title"` |
+| `[data-testid="stock"]` | Elements with a `data-testid` attribute of "stock" |
+| `h1` | All `<h1>` heading elements |
+| `.price-box span` | `<span>` elements inside a `.price-box` |
+
+## AI selector suggestions
+
+When you create a monitor, Cheetah Ping's AI analyzes the page structure and suggests reliable selectors. Each suggestion includes:
+
+- The CSS selector itself
+- A description of what it matches
+- A reliability rating (Reliable, Moderate, or Fragile)
+
+**Prefer selectors that use IDs or data attributes.** These are the most stable because they are less likely to change when the site updates its design.
+
+## Tips for choosing selectors
+
+1. **Use IDs when available** (`#price`, `#availability`). IDs are unique per page and rarely change.
+2. **Data attributes are second-best** (`[data-product-price]`). Developers add these intentionally and tend to keep them stable.
+3. **Class names can change** (`.css-1a2b3c`). Auto-generated class names change when the site deploys new CSS.
+4. **Be specific enough** to match exactly one element. If your selector matches multiple elements, Cheetah Ping uses the first match.
+
+## Testing your selector
+
+The monitor creation form includes a live preview panel. After entering a URL and selector, the preview shows:
+- Whether the selector matches an element
+- The current text content of the matched element
+- How many elements match (ideally just one)
