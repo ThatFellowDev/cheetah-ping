@@ -69,6 +69,26 @@ function formatFrequency(minutes: number) {
   return FREQUENCY_OPTIONS.find((f) => f.value === minutes)?.label || `Every ${minutes}m`;
 }
 
+function getNextCheckDate(lastChecked: Date | null, intervalMinutes: number): Date | null {
+  if (!lastChecked) return null;
+  return new Date(new Date(lastChecked).getTime() + intervalMinutes * 60_000);
+}
+
+function formatRelativeTime(date: Date): string {
+  const now = Date.now();
+  const target = new Date(date).getTime();
+  const diffMs = target - now;
+  if (diffMs < 0) return 'any moment';
+  const diffMin = Math.round(diffMs / 60_000);
+  if (diffMin < 1) return 'under a minute';
+  if (diffMin < 60) return `in ${diffMin}m`;
+  const diffHrs = Math.floor(diffMin / 60);
+  const remMin = diffMin % 60;
+  if (diffHrs < 24) return remMin > 0 ? `in ${diffHrs}h ${remMin}m` : `in ${diffHrs}h`;
+  const diffDays = Math.floor(diffHrs / 24);
+  return `in ${diffDays}d ${diffHrs % 24}h`;
+}
+
 export function MonitorDetail({
   monitor,
   changes,
@@ -507,6 +527,20 @@ export function MonitorDetail({
             <span className="text-muted-foreground">Last checked</span>
             <span>{formatDate(monitor.lastCheckedAt)}</span>
           </div>
+          {monitor.status === 'active' && (() => {
+            const nextCheck = getNextCheckDate(monitor.lastCheckedAt, monitor.checkIntervalMinutes);
+            return nextCheck ? (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Next check</span>
+                <span className="flex items-center gap-1.5">
+                  <span>{formatRelativeTime(nextCheck)}</span>
+                  <span className="text-muted-foreground/50 text-xs">
+                    ({nextCheck.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })})
+                  </span>
+                </span>
+              </div>
+            ) : null;
+          })()}
           <div className="flex justify-between">
             <span className="text-muted-foreground">Last changed</span>
             <span>{formatDate(monitor.lastChangedAt)}</span>
@@ -549,7 +583,13 @@ export function MonitorDetail({
                   <div>
                     <p className="text-sm font-medium text-amber-400">Watching for changes...</p>
                     <p className="text-xs text-muted-foreground">
-                      Checking {formatFrequency(monitor.checkIntervalMinutes).toLowerCase()}
+                      {(() => {
+                        const nextCheck = getNextCheckDate(monitor.lastCheckedAt, monitor.checkIntervalMinutes);
+                        if (nextCheck) {
+                          return `Next check ${formatRelativeTime(nextCheck)} (${nextCheck.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })})`;
+                        }
+                        return `Checking ${formatFrequency(monitor.checkIntervalMinutes).toLowerCase()}`;
+                      })()}
                     </p>
                   </div>
                   <div>
