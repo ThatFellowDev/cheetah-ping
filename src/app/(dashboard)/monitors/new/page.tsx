@@ -7,7 +7,12 @@ import { MonitorForm } from './monitor-form';
 import { LinkButton } from '@/shared/components/link-button';
 import { NewMonitorShell } from './new-monitor-shell';
 
-export default async function NewMonitorPage() {
+export default async function NewMonitorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ url?: string }>;
+}) {
+  const { url: initialUrl } = await searchParams;
   const user = await requireAuth();
   const limits = PLAN_LIMITS[user.plan];
 
@@ -38,7 +43,7 @@ export default async function NewMonitorPage() {
 
   return (
     <NewMonitorShell plan={user.plan}>
-      <MonitorForm plan={user.plan} />
+      <MonitorForm plan={user.plan} initialUrl={initialUrl} />
     </NewMonitorShell>
   );
 }

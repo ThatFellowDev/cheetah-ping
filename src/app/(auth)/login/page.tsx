@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, Suspense } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,24 @@ import { Mail, ArrowLeft } from 'lucide-react';
 
 const TURNSTILE_SITE_KEY = process.env.NODE_ENV === 'production' ? process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY : undefined;
 
+function isValidCallbackURL(url: string): boolean {
+  // Only allow same-origin relative paths
+  return url.startsWith('/') && !url.startsWith('//');
+}
+
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
+  const searchParams = useSearchParams();
+  const rawCallbackURL = searchParams.get('callbackURL');
+  const callbackURL = rawCallbackURL && isValidCallbackURL(rawCallbackURL) ? rawCallbackURL : '/dashboard';
+
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -46,7 +64,7 @@ export default function LoginPage() {
 
       await authClient.signIn.magicLink({
         email,
-        callbackURL: '/dashboard',
+        callbackURL,
       });
       setSent(true);
     } catch {

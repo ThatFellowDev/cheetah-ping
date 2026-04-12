@@ -24,10 +24,17 @@ export default function PrivacyPage() {
           detecting changes, and sending you email alerts. We do not sell your data.
         </p>
 
-        <h2 className="text-foreground font-semibold text-lg mt-6">Cookies</h2>
+        <h2 className="text-foreground font-semibold text-lg mt-6">Cookies and analytics</h2>
         <p>
           We use essential cookies only for authentication and session management.
           No tracking cookies or third-party analytics cookies are used.
+        </p>
+        <p>
+          We use anonymous product analytics via PostHog to understand how people
+          use Cheetah Ping. This uses your browser&apos;s localStorage (not cookies)
+          and does not track you across other websites. We track page views, signup,
+          and subscription events to measure which features help users most.
+          No personal data is shared with third parties.
         </p>
 
         <h2 className="text-foreground font-semibold text-lg mt-6">Data retention</h2>

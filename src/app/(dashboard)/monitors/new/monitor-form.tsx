@@ -91,9 +91,9 @@ const watchModes = [
   },
 ];
 
-export function MonitorForm({ plan }: { plan: Plan }) {
+export function MonitorForm({ plan, initialUrl }: { plan: Plan; initialUrl?: string }) {
   const router = useRouter();
-  const [url, setUrl] = useState('');
+  const [url, setUrl] = useState(initialUrl ?? '');
   const [urlPlaceholder, setUrlPlaceholder] = useState('https://example.com');
   const [intent, setIntent] = useState('');
   const [intentPlaceholder, setIntentPlaceholder] = useState('e.g. "Alert me when the price drops"');

@@ -4,6 +4,8 @@ import { db } from '@/shared/database/db';
 import { user } from '@/shared/database/schema';
 import { requireAuth } from '@/lib/require-auth';
 import { LogoutButton } from './logout-button';
+import { AnalyticsIdentify } from '@/shared/analytics/identify';
+import { SyncAttribution } from '@/shared/attribution/sync-attribution';
 
 export default async function DashboardLayout({
   children,
@@ -56,6 +58,8 @@ export default async function DashboardLayout({
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>
+      <AnalyticsIdentify />
+      <SyncAttribution />
     </div>
   );
 }
