@@ -2,24 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/shared/database/db';
 import { user, monitors, changeLog } from '@/shared/database/schema';
 import { eq, lt, and, inArray } from 'drizzle-orm';
-import { PLAN_LIMITS, type Plan } from '@/lib/plan-limits';
+import { PLAN_LIMITS } from '@/lib/plan-limits';
 
-export async function POST(request: NextRequest) {
-  // Protect with a secret so only authorized callers can trigger retention
-  const authHeader = request.headers.get('authorization');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+async function runRetention() {
   let totalDeleted = 0;
 
-  // Process each plan tier
   for (const [plan, limits] of Object.entries(PLAN_LIMITS)) {
     const cutoff = new Date(Date.now() - limits.historyDays * 24 * 60 * 60 * 1000);
 
-    // Find all users on this plan
     const usersOnPlan = await db.query.user.findMany({
       where: eq(user.plan, plan),
       columns: { id: true },
@@ -29,7 +19,6 @@ export async function POST(request: NextRequest) {
 
     const userIds = usersOnPlan.map((u) => u.id);
 
-    // Find monitors belonging to these users
     const userMonitors = await db.query.monitors.findMany({
       where: inArray(monitors.userId, userIds),
       columns: { id: true },
@@ -39,7 +28,6 @@ export async function POST(request: NextRequest) {
 
     const monitorIds = userMonitors.map((m) => m.id);
 
-    // Delete change logs older than the plan's retention window
     const result = await db
       .delete(changeLog)
       .where(
@@ -53,9 +41,44 @@ export async function POST(request: NextRequest) {
     totalDeleted += result.length;
   }
 
+  return totalDeleted;
+}
+
+function authorize(request: NextRequest): boolean {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) return true; // no secret = dev mode, allow
+
+  // Vercel Crons send the secret in the Authorization header
+  const authHeader = request.headers.get('authorization');
+  return authHeader === `Bearer ${cronSecret}`;
+}
+
+// Vercel Cron calls GET
+export async function GET(request: NextRequest) {
+  if (!authorize(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const deleted = await runRetention();
+
   return NextResponse.json({
     success: true,
-    deleted: totalDeleted,
+    deleted,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+// Also support POST for manual triggers
+export async function POST(request: NextRequest) {
+  if (!authorize(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const deleted = await runRetention();
+
+  return NextResponse.json({
+    success: true,
+    deleted,
     timestamp: new Date().toISOString(),
   });
 }
