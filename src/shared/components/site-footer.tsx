@@ -6,7 +6,10 @@ export function SiteFooter() {
       <div className="mx-auto max-w-5xl px-4">
         <div className="flex flex-col gap-10 sm:flex-row sm:justify-between">
           <div className="max-w-xs">
-            <span className="gradient-text font-heading font-bold text-lg">Cheetah Ping</span>
+            <div className="flex items-center gap-2">
+              <img src="/cheetah-ping-logo.png" alt="" className="w-8 h-8 rounded-lg" />
+              <span className="gradient-text font-heading font-bold text-lg">Cheetah Ping</span>
+            </div>
             <p className="mt-2 text-sm text-muted-foreground">
               Website change monitoring. Get alerted the moment something changes.
             </p>

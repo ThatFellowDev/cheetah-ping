@@ -19,8 +19,9 @@ export default async function MarketingLayout({
     <div className="min-h-screen">
       <header className="sticky top-0 z-50 glass border-b border-white/5">
         <div className="mx-auto max-w-5xl flex items-center justify-between px-4 h-14">
-          <Link href="/" className="font-heading font-bold text-lg gradient-text shrink-0">
-            Cheetah Ping
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <img src="/icon.png" alt="" className="w-6 h-6" />
+            <span className="font-heading font-bold text-lg gradient-text">Cheetah Ping</span>
           </Link>
           <nav className="hidden md:flex items-center gap-1">
             <Link href="/use-cases" className="text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">Use Cases</Link>

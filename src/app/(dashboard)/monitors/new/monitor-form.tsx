@@ -255,55 +255,6 @@ export function MonitorForm({ plan, initialUrl }: { plan: Plan; initialUrl?: str
 
   return (
     <div className="space-y-5">
-      {/* Suggestion chips + try it example */}
-      {!analyzed && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-4"
-        >
-          {/* Inspiration chips - hidden on mobile to keep the form clean */}
-          <div className="hidden sm:block space-y-4">
-            <button
-              type="button"
-              onClick={() => {
-                setUrl('https://www.apple.com/newsroom/');
-                setIntent('Alert me when Apple publishes a new press release');
-                setIntentPlaceholder('Alert me when Apple publishes a new press release');
-              }}
-              className="w-full glass rounded-xl p-3 text-left border border-transparent hover:border-primary/30 transition-all group cursor-pointer"
-            >
-              <p className="text-[11px] text-primary font-medium mb-1">Try it. See how it works.</p>
-              <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-                Watch <span className="font-mono text-foreground/70">apple.com/newsroom</span> for new press releases
-              </p>
-            </button>
-
-            <div className="space-y-2">
-              <p className="text-xs text-center text-muted-foreground">
-                Or try watching for...
-              </p>
-              <div className="flex flex-wrap gap-2 justify-center">
-                {inspirations.map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    onClick={() => {
-                      setUrlPlaceholder(item.placeholder);
-                      setIntentPlaceholder(item.intent);
-                      setIntent(item.intent);
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs glass border border-transparent hover:border-primary/30 transition-all text-muted-foreground hover:text-foreground"
-                  >
-                    <item.icon className="h-3 w-3 text-primary" />
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      )}
 
       {/* URL input — always visible */}
       <Card className="glass border-0">

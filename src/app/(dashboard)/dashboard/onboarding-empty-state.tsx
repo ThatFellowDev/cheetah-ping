@@ -62,8 +62,13 @@ export function OnboardingEmptyState({ plan }: { plan: Plan }) {
         transition={{ duration: 0.5 }}
         className="text-center space-y-3"
       >
+        <img
+          src="/cheetah-ping-logo.png"
+          alt="Cheetah Ping"
+          className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-2xl"
+        />
         <h1 className="font-heading text-3xl font-bold">
-          Welcome to <span className="gradient-text">Cheetah Ping</span>
+          Welcome to{' '}<span className="gradient-text whitespace-nowrap">Cheetah Ping</span>
         </h1>
         <p className="text-muted-foreground max-w-md mx-auto">
           Paste a link. Get alerted when it changes. That's it. We'll handle the rest.

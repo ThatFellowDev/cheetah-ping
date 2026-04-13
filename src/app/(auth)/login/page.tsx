@@ -138,8 +138,15 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-md space-y-4 animate-fade-in-up">
-      <div className="text-center mb-2">
-        <Link href="/" className="font-heading text-2xl font-bold gradient-text">
+      <div className="text-center mb-2 space-y-2">
+        <Link href="/">
+          <img
+            src="/cheetah-ping-logo.png"
+            alt="Cheetah Ping"
+            className="w-14 h-14 mx-auto rounded-xl"
+          />
+        </Link>
+        <Link href="/" className="block font-heading text-2xl font-bold gradient-text">
           Cheetah Ping
         </Link>
       </div>
@@ -188,7 +195,7 @@ function LoginForm() {
                 type="checkbox"
                 checked={termsAccepted}
                 onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-primary focus:ring-primary/50 shrink-0"
+                className="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 accent-amber-500 focus:ring-primary/50 shrink-0"
               />
               <span className="text-xs text-muted-foreground leading-relaxed">
                 I agree to the{' '}

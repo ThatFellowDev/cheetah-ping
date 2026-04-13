@@ -6,7 +6,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { X } from 'lucide-react';
+import { X, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ScreenshotCompareProps {
@@ -17,6 +17,17 @@ interface ScreenshotCompareProps {
 }
 
 type ViewMode = 'slider' | 'before' | 'after';
+
+function downloadImage(url: string, filename: string) {
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 
 export function ScreenshotCompare({
   open,
@@ -56,19 +67,19 @@ export function ScreenshotCompare({
         className="max-w-[95vw] sm:max-w-[90vw] lg:max-w-5xl max-h-[90vh] p-0 bg-black/95 ring-white/10 overflow-hidden"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+        <div className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-white/10">
           <DialogTitle className="text-sm font-medium text-white">
             Compare changes
           </DialogTitle>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* View mode toggles */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5 sm:gap-1">
               {(['slider', 'before', 'after'] as const).map((mode) => (
                 <button
                   key={mode}
                   type="button"
                   onClick={() => setViewMode(mode)}
-                  className={`px-2.5 py-1 rounded-md text-xs transition-all capitalize ${
+                  className={`px-2 sm:px-2.5 py-1 rounded-md text-[11px] sm:text-xs transition-all capitalize ${
                     viewMode === mode
                       ? 'bg-primary/20 text-primary border border-primary/30'
                       : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
@@ -78,6 +89,20 @@ export function ScreenshotCompare({
                 </button>
               ))}
             </div>
+            {/* Download button for current view */}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => {
+                const url = viewMode === 'before' ? beforeUrl : afterUrl ?? beforeUrl;
+                if (url) downloadImage(url, `cheetah-ping-${viewMode}.jpg`);
+              }}
+              className="text-muted-foreground hover:text-foreground"
+              title="Download screenshot"
+            >
+              <Download className="h-4 w-4" />
+              <span className="sr-only">Download</span>
+            </Button>
             <Button
               variant="ghost"
               size="icon-sm"
@@ -145,13 +170,23 @@ export function ScreenshotCompare({
                 </div>
               </div>
 
-              {/* Labels */}
-              <div className="absolute top-3 left-3 px-2 py-1 rounded bg-black/60 text-[10px] text-white/70 uppercase tracking-wider pointer-events-none">
+              {/* Labels with download buttons */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); if (beforeUrl) downloadImage(beforeUrl, 'cheetah-ping-before.jpg'); }}
+                className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded bg-black/60 text-[10px] text-white/70 uppercase tracking-wider hover:bg-black/80 hover:text-white transition-colors"
+              >
                 Before
-              </div>
-              <div className="absolute top-3 right-3 px-2 py-1 rounded bg-black/60 text-[10px] text-white/70 uppercase tracking-wider pointer-events-none">
+                <Download className="h-2.5 w-2.5" />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); if (afterUrl) downloadImage(afterUrl, 'cheetah-ping-after.jpg'); }}
+                className="absolute top-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded bg-black/60 text-[10px] text-white/70 uppercase tracking-wider hover:bg-black/80 hover:text-white transition-colors"
+              >
                 After
-              </div>
+                <Download className="h-2.5 w-2.5" />
+              </button>
             </div>
           ) : (
             /* Toggle view */
