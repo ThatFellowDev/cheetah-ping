@@ -5,12 +5,11 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { StatusBadge } from '@/shared/components/status-badge';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
-import { EmptyState } from '@/shared/components/empty-state';
+import { ScreenshotCompare } from '@/shared/components/screenshot-compare';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
@@ -23,7 +22,6 @@ import {
   Pencil,
   Check,
   X,
-  Crosshair,
   Share2,
   Copy,
 } from 'lucide-react';
@@ -111,6 +109,14 @@ export function MonitorDetail({
   const [editingFrequency, setEditingFrequency] = useState(false);
   const [savingFrequency, setSavingFrequency] = useState(false);
   const [sharingLoading, setSharingLoading] = useState(false);
+  const [editingKeyword, setEditingKeyword] = useState(false);
+  const [editKeyword, setEditKeyword] = useState(monitor.keyword || '');
+  const [savingKeyword, setSavingKeyword] = useState(false);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const [compareImages, setCompareImages] = useState<{
+    beforeUrl: string | null;
+    afterUrl: string | null;
+  }>({ beforeUrl: null, afterUrl: null });
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -118,6 +124,7 @@ export function MonitorDetail({
       inputRef.current.select();
     }
   }, [editing]);
+
 
   async function handleSaveLabel() {
     setSaving(true);
@@ -165,6 +172,30 @@ export function MonitorDetail({
   function handleCancelSelectorEdit() {
     setEditSelector(monitor.selector || '');
     setEditingSelector(false);
+  }
+
+  async function handleSaveKeyword() {
+    setSavingKeyword(true);
+    try {
+      const res = await fetch(`/api/monitors/${monitor.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyword: editKeyword.trim() || null }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success('Keyword updated');
+      setEditingKeyword(false);
+      router.refresh();
+    } catch {
+      toast.error('Failed to update keyword');
+    } finally {
+      setSavingKeyword(false);
+    }
+  }
+
+  function handleCancelKeywordEdit() {
+    setEditKeyword(monitor.keyword || '');
+    setEditingKeyword(false);
   }
 
   async function handleToggle() {
@@ -317,12 +348,16 @@ export function MonitorDetail({
             <span className="text-muted-foreground">URL</span>
             <span className="truncate max-w-[180px] sm:max-w-xs">{monitor.url}</span>
           </div>
-          {monitor.label && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Label</span>
-              <span>{monitor.label}</span>
-            </div>
-          )}
+          <div className="flex justify-between items-center">
+            <span className="text-muted-foreground">Label</span>
+            <button
+              onClick={() => setEditing(true)}
+              className="flex items-center gap-1.5 group hover:text-foreground transition-colors"
+            >
+              <span>{monitor.label || 'Untitled'}</span>
+              <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          </div>
           <div>
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Check frequency</span>
@@ -402,6 +437,10 @@ export function MonitorDetail({
               </div>
             )}
           </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Watch mode</span>
+            <span className="capitalize">{monitor.selector ? 'Selector' : monitor.keyword ? 'Keyword' : 'Full page'}</span>
+          </div>
           {(monitor.selector || editingSelector) && (
             <div>
               <div className="flex justify-between items-center">
@@ -448,10 +487,53 @@ export function MonitorDetail({
               )}
             </div>
           )}
-          {monitor.keyword && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Keyword</span>
-              <span>"{monitor.keyword}"</span>
+          {(monitor.keyword || editingKeyword) && (
+            <div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Keyword</span>
+                {!editingKeyword ? (
+                  <div className="flex items-center gap-2">
+                    <span>"{monitor.keyword}"</span>
+                    <button
+                      onClick={() => setEditingKeyword(true)}
+                      className="p-1 rounded hover:bg-white/10 text-muted-foreground hover:text-foreground transition-all"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={handleSaveKeyword}
+                      disabled={savingKeyword}
+                      className="p-1 rounded hover:bg-white/10 text-primary transition-all"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={handleCancelKeywordEdit}
+                      disabled={savingKeyword}
+                      className="p-1 rounded hover:bg-white/10 text-muted-foreground transition-all"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
+              </div>
+              {editingKeyword && (
+                <input
+                  value={editKeyword}
+                  onChange={(e) => setEditKeyword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveKeyword();
+                    if (e.key === 'Escape') handleCancelKeywordEdit();
+                  }}
+                  placeholder="Enter keyword to watch for"
+                  className="mt-2 w-full text-sm bg-transparent border border-white/10 rounded-lg px-3 py-2 outline-none focus:border-primary/50 transition-colors"
+                  disabled={savingKeyword}
+                  autoFocus
+                />
+              )}
             </div>
           )}
           <Separator />
@@ -497,7 +579,7 @@ export function MonitorDetail({
             {monitor.shareEnabled && changes.some((c) => c.shareToken) && (
               <div className="flex items-center gap-2">
                 <code className="text-[11px] text-muted-foreground/70 truncate flex-1">
-                  {`${typeof window !== 'undefined' ? window.location.origin : ''}/changes/${changes.find((c) => c.shareToken)?.shareToken}`}
+                  {`/changes/${changes.find((c) => c.shareToken)?.shareToken}`}
                 </code>
                 <button
                   type="button"
@@ -629,51 +711,53 @@ export function MonitorDetail({
                     <p className={`text-sm ${change.aiSummary ? 'text-xs text-muted-foreground' : ''}`}>{change.diffSummary}</p>
                   )}
                   {(change.beforeScreenshotUrl || change.afterScreenshotUrl) && (
-                    <div className="grid grid-cols-2 gap-2">
-                      {change.beforeScreenshotUrl ? (
-                        <a
-                          href={change.beforeScreenshotUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block group"
-                        >
-                          <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-1">Before</p>
-                          <div className="aspect-[16/10] rounded-md overflow-hidden border border-white/10 bg-black/20 group-hover:border-white/20 transition-all">
-                            <img
-                              src={change.beforeScreenshotUrl}
-                              alt="Before"
-                              className="w-full h-full object-cover object-top"
-                              loading="lazy"
-                            />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCompareImages({
+                          beforeUrl: change.beforeScreenshotUrl,
+                          afterUrl: change.afterScreenshotUrl,
+                        });
+                        setCompareOpen(true);
+                      }}
+                      className="w-full text-left cursor-pointer"
+                    >
+                      <div className="grid grid-cols-2 gap-2">
+                        {change.beforeScreenshotUrl ? (
+                          <div className="group">
+                            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-1">Before</p>
+                            <div className="aspect-[16/10] rounded-md overflow-hidden border border-white/10 bg-black/20 group-hover:border-white/20 transition-all">
+                              <img
+                                src={change.beforeScreenshotUrl}
+                                alt="Before"
+                                className="w-full h-full object-cover object-top"
+                                loading="lazy"
+                              />
+                            </div>
                           </div>
-                        </a>
-                      ) : (
-                        <div>
-                          <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-1">Before</p>
-                          <div className="aspect-[16/10] rounded-md border border-dashed border-white/10 flex items-center justify-center text-[10px] text-muted-foreground/50">
-                            No prior snapshot
+                        ) : (
+                          <div>
+                            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-1">Before</p>
+                            <div className="aspect-[16/10] rounded-md border border-dashed border-white/10 flex items-center justify-center text-[10px] text-muted-foreground/50">
+                              No prior snapshot
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      {change.afterScreenshotUrl && (
-                        <a
-                          href={change.afterScreenshotUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block group"
-                        >
-                          <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-1">After</p>
-                          <div className="aspect-[16/10] rounded-md overflow-hidden border border-white/10 bg-black/20 group-hover:border-white/20 transition-all">
-                            <img
-                              src={change.afterScreenshotUrl}
-                              alt="After"
-                              className="w-full h-full object-cover object-top"
-                              loading="lazy"
-                            />
+                        )}
+                        {change.afterScreenshotUrl && (
+                          <div className="group">
+                            <p className="text-[10px] text-muted-foreground/60 uppercase tracking-wider mb-1">After</p>
+                            <div className="aspect-[16/10] rounded-md overflow-hidden border border-white/10 bg-black/20 group-hover:border-white/20 transition-all">
+                              <img
+                                src={change.afterScreenshotUrl}
+                                alt="After"
+                                className="w-full h-full object-cover object-top"
+                                loading="lazy"
+                              />
+                            </div>
                           </div>
-                        </a>
-                      )}
-                    </div>
+                        )}
+                      </div>
+                    </button>
                   )}
                 </div>
               ))}
@@ -690,6 +774,13 @@ export function MonitorDetail({
         confirmLabel="Delete"
         onConfirm={handleDelete}
         loading={loading}
+      />
+
+      <ScreenshotCompare
+        open={compareOpen}
+        onOpenChange={setCompareOpen}
+        beforeUrl={compareImages.beforeUrl}
+        afterUrl={compareImages.afterUrl}
       />
     </div>
   );

@@ -46,7 +46,7 @@ async function runRetention() {
 }
 
 function authorize(request: NextRequest): boolean {
-  const cronSecret = process.env.CRON_SECRET;
+  const cronSecret = process.env.CRON_SECRET?.trim();
   if (!cronSecret) return true; // no secret = dev mode
 
   const authHeader = request.headers.get('authorization') || '';

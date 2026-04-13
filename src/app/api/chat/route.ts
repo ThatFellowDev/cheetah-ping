@@ -1,4 +1,4 @@
-import { streamText } from 'ai';
+import { streamText, type UIMessage } from 'ai';
 import { createGroq } from '@ai-sdk/groq';
 import { getDocsContext } from '@/lib/docs-context';
 import { rateLimit } from '@/lib/rate-limit';
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   });
   if (rateLimited) return rateLimited;
 
-  const { messages } = await request.json();
+  const { messages } = await request.json() as { messages: UIMessage[] };
 
   if (!Array.isArray(messages) || messages.length === 0) {
     return NextResponse.json(
@@ -36,6 +36,15 @@ export async function POST(request: Request) {
       { status: 400 }
     );
   }
+
+  // Convert UI messages (parts format) to simple {role, content} for the model
+  const simpleMessages = messages.map((m) => ({
+    role: m.role as 'user' | 'assistant',
+    content: m.parts
+      ?.filter((p): p is { type: 'text'; text: string } => p.type === 'text')
+      .map((p) => p.text)
+      .join('') || (typeof (m as any).content === 'string' ? (m as any).content : ''),
+  }));
 
   const docsContext = getDocsContext();
 
@@ -47,7 +56,7 @@ export async function POST(request: Request) {
 
 Documentation:
 ${docsContext}`,
-    messages,
+    messages: simpleMessages,
     temperature: 0.2,
     maxOutputTokens: 512,
   });

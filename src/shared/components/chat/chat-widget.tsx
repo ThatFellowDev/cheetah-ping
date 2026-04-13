@@ -65,15 +65,10 @@ export function ChatWidget() {
 
       {/* Chat panel */}
       {isOpen && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-end sm:inset-auto sm:bottom-5 sm:right-5">
-          {/* Backdrop on mobile */}
-          <div
-            className="absolute inset-0 bg-black/50 sm:hidden"
-            onClick={() => setIsOpen(false)}
-          />
+        <div className="fixed bottom-5 left-4 right-4 z-[60] flex items-end justify-end sm:left-auto sm:right-5">
 
           {/* Panel */}
-          <div className="relative flex h-full w-full flex-col overflow-hidden border border-white/10 bg-background sm:h-[500px] sm:w-96 sm:rounded-2xl sm:shadow-2xl">
+          <div className="relative flex max-h-[70vh] w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-background shadow-2xl sm:max-h-[500px] sm:w-96">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
               <div className="flex items-center gap-2">
@@ -149,7 +144,9 @@ export function ChatWidget() {
 
               {error && (
                 <div className="mb-3 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                  Something went wrong. Please try again.
+                  {error.message?.includes('503') || error.message?.includes('unavailable')
+                    ? 'Chat is currently unavailable. The AI service may be down.'
+                    : 'Something went wrong. Please try again.'}
                 </div>
               )}
 
@@ -166,7 +163,7 @@ export function ChatWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Ask a question..."
-                className="h-11 flex-1 rounded-xl border border-white/10 bg-white/5 px-3.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-amber-400/50 focus:outline-none focus:ring-1 focus:ring-amber-400/30"
+                className="h-11 flex-1 rounded-xl border border-white/10 bg-white/5 px-3.5 text-base text-foreground placeholder:text-muted-foreground focus:border-amber-400/50 focus:outline-none focus:ring-1 focus:ring-amber-400/30"
                 disabled={isLoading}
               />
               <button

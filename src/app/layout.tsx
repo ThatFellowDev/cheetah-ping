@@ -120,14 +120,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" className={`dark ${geistMono.variable} h-full antialiased overflow-x-hidden`}>
       <head>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col overflow-x-hidden">
         <PostHogProvider>
           {children}
         </PostHogProvider>

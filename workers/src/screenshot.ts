@@ -7,6 +7,8 @@
  * Returns ArrayBuffer because that's what env.SCREENSHOTS.put() accepts directly.
  */
 
+import { COOKIE_DISMISS_JS, COOKIE_HIDE_CSS } from './dismiss-cookies';
+
 export interface ScreenshotEnv {
   BROWSERLESS_URL?: string;
   BROWSERLESS_TOKEN?: string;
@@ -42,10 +44,19 @@ export async function takeScreenshot(
     gotoOptions: { waitUntil: 'networkidle2', timeout: 20_000 },
     // Force English locale so sites don't serve Finnish content based on
     // the Hetzner Helsinki VPS geo-IP.
-    setExtraHTTPHeaders: { 'Accept-Language': 'en-US,en;q=0.9' },
+    setExtraHTTPHeaders: {
+      'Accept-Language': 'en-US,en;q=0.9',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    },
+    // Dismiss cookie/consent banners before capturing the screenshot.
+    // Layer 1: JS clicks common "Accept" buttons in known cookie containers.
+    // Layer 2: CSS hides any remaining banners as a fallback.
+    addScriptTag: [{ content: COOKIE_DISMISS_JS }],
+    addStyleTag: [{ content: COOKIE_HIDE_CSS }],
+    waitForTimeout: 800,
   };
 
-  const endpoint = `${env.BROWSERLESS_URL}/chrome/screenshot?token=${env.BROWSERLESS_TOKEN}`;
+  const endpoint = `${env.BROWSERLESS_URL}/chrome/screenshot?token=${env.BROWSERLESS_TOKEN}&stealth&blockAds`;
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

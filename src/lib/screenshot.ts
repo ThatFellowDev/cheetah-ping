@@ -6,9 +6,13 @@
  *
  * Returns the raw image bytes as a Buffer, ready to upload to R2.
  *
+ * Cookie/consent banners are auto-dismissed via injected JS + CSS.
+ *
  * Mirrors the smart-fetch.ts pattern: Browserless creds come from env vars,
  * timeouts are aggressive enough to fail fast in serverless environments.
  */
+
+import { COOKIE_DISMISS_JS, COOKIE_HIDE_CSS } from './dismiss-cookies';
 
 export type ScreenshotOpts = {
   /** Image format. JPEG = small, good for snapshots. PNG = sharp, good for previews. */
@@ -42,10 +46,17 @@ export async function takeScreenshot(url: string, opts: ScreenshotOpts = {}): Pr
     gotoOptions: { waitUntil: 'networkidle2', timeout: 20_000 },
     // Force English locale so sites don't serve Finnish content based on
     // the Hetzner Helsinki VPS geo-IP.
-    setExtraHTTPHeaders: { 'Accept-Language': 'en-US,en;q=0.9' },
+    setExtraHTTPHeaders: {
+      'Accept-Language': 'en-US,en;q=0.9',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    },
+    // Dismiss cookie/consent banners before capturing the screenshot.
+    addScriptTag: [{ content: COOKIE_DISMISS_JS }],
+    addStyleTag: [{ content: COOKIE_HIDE_CSS }],
+    waitForTimeout: 800,
   };
 
-  const endpoint = `${browserlessUrl}/chrome/screenshot?token=${browserlessToken}`;
+  const endpoint = `${browserlessUrl}/chrome/screenshot?token=${browserlessToken}&stealth&blockAds`;
   const res = await fetch(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

@@ -44,9 +44,9 @@ const SAMPLE_ALERTS = [
 ];
 
 const STEPS = [
-  { num: 1, label: 'Paste a URL', active: true },
-  { num: 2, label: 'AI configures it', active: false },
-  { num: 3, label: 'Get alerts', active: false },
+  { num: 1, label: 'Paste a URL', shortLabel: 'Paste URL', active: true },
+  { num: 2, label: 'AI configures it', shortLabel: 'AI configures', active: false },
+  { num: 3, label: 'Get alerts', shortLabel: 'Get alerts', active: false },
 ];
 
 export function OnboardingEmptyState({ plan }: { plan: Plan }) {
@@ -75,24 +75,25 @@ export function OnboardingEmptyState({ plan }: { plan: Plan }) {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="flex justify-center gap-2"
+        className="flex justify-center items-center gap-1 sm:gap-2 px-4"
       >
         {STEPS.map((step, i) => (
-          <div key={step.num} className="flex items-center gap-2">
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
+          <div key={step.num} className="flex items-center gap-1 sm:gap-2">
+            <div className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-full text-[11px] sm:text-sm font-medium whitespace-nowrap ${
               step.active
                 ? 'bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30'
                 : 'bg-muted/30 text-muted-foreground border border-transparent'
             }`}>
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+              <span className={`w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold shrink-0 ${
                 step.active ? 'bg-amber-500 text-black' : 'bg-muted text-muted-foreground'
               }`}>
                 {step.num}
               </span>
-              {step.label}
+              <span className="sm:hidden">{step.shortLabel}</span>
+              <span className="hidden sm:inline">{step.label}</span>
             </div>
             {i < STEPS.length - 1 && (
-              <div className="w-8 h-px bg-muted-foreground/20" />
+              <div className="w-3 sm:w-8 h-px bg-muted-foreground/20 shrink-0" />
             )}
           </div>
         ))}
@@ -107,12 +108,12 @@ export function OnboardingEmptyState({ plan }: { plan: Plan }) {
         <MonitorForm plan={plan} />
       </motion.div>
 
-      {/* Use case inspiration grid */}
+      {/* Use case inspiration grid - hidden on mobile (form has its own inspiration chips) */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="space-y-3"
+        className="hidden sm:block space-y-3"
       >
         <h3 className="text-sm font-medium text-muted-foreground text-center">Ideas for what to monitor</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">

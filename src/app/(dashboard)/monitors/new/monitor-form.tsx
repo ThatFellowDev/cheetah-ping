@@ -262,42 +262,44 @@ export function MonitorForm({ plan, initialUrl }: { plan: Plan; initialUrl?: str
           animate={{ opacity: 1 }}
           className="space-y-4"
         >
-          {/* Try it example */}
-          <button
-            type="button"
-            onClick={() => {
-              setUrl('https://www.apple.com/newsroom/');
-              setIntent('Alert me when Apple publishes a new press release');
-              setIntentPlaceholder('Alert me when Apple publishes a new press release');
-            }}
-            className="w-full glass rounded-xl p-3 text-left border border-transparent hover:border-primary/30 transition-all group cursor-pointer"
-          >
-            <p className="text-[11px] text-primary font-medium mb-1">Try it. See how it works.</p>
-            <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-              Watch <span className="font-mono text-foreground/70">apple.com/newsroom</span> for new press releases
-            </p>
-          </button>
+          {/* Inspiration chips - hidden on mobile to keep the form clean */}
+          <div className="hidden sm:block space-y-4">
+            <button
+              type="button"
+              onClick={() => {
+                setUrl('https://www.apple.com/newsroom/');
+                setIntent('Alert me when Apple publishes a new press release');
+                setIntentPlaceholder('Alert me when Apple publishes a new press release');
+              }}
+              className="w-full glass rounded-xl p-3 text-left border border-transparent hover:border-primary/30 transition-all group cursor-pointer"
+            >
+              <p className="text-[11px] text-primary font-medium mb-1">Try it. See how it works.</p>
+              <p className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                Watch <span className="font-mono text-foreground/70">apple.com/newsroom</span> for new press releases
+              </p>
+            </button>
 
-          <div className="space-y-2">
-            <p className="text-xs text-center text-muted-foreground">
-              Or try watching for...
-            </p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              {inspirations.map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  onClick={() => {
-                    setUrlPlaceholder(item.placeholder);
-                    setIntentPlaceholder(item.intent);
-                    setIntent(item.intent);
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs glass border border-transparent hover:border-primary/30 transition-all text-muted-foreground hover:text-foreground"
-                >
-                  <item.icon className="h-3 w-3 text-primary" />
-                  {item.label}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <p className="text-xs text-center text-muted-foreground">
+                Or try watching for...
+              </p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                {inspirations.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => {
+                      setUrlPlaceholder(item.placeholder);
+                      setIntentPlaceholder(item.intent);
+                      setIntent(item.intent);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs glass border border-transparent hover:border-primary/30 transition-all text-muted-foreground hover:text-foreground"
+                  >
+                    <item.icon className="h-3 w-3 text-primary" />
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -465,12 +467,12 @@ export function MonitorForm({ plan, initialUrl }: { plan: Plan; initialUrl?: str
                             })()}
                           />
                         )}
-                        {/* Hover hint to open the visual picker */}
+                        {/* Hint to open the visual picker — always visible on mobile, hover on desktop */}
                         {!pickedElement && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-all">
-                            <span className="flex items-center gap-2 px-4 py-2 rounded-full bg-black/70 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute inset-0 flex items-end sm:items-center justify-center bg-gradient-to-t from-black/60 via-transparent to-transparent sm:bg-black/0 sm:group-hover:bg-black/40 transition-all">
+                            <span className="flex items-center gap-2 px-4 py-2 mb-3 sm:mb-0 rounded-full bg-black/70 border border-white/20 text-white text-xs font-medium sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                               <Crosshair className="h-3.5 w-3.5" />
-                              Click to pick an element
+                              Tap to pick a section
                             </span>
                           </div>
                         )}

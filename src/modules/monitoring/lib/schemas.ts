@@ -26,6 +26,14 @@ export const createMonitorSchema = z.object({
 
 export const updateMonitorSchema = createMonitorSchema.partial().extend({
   shareEnabled: z.boolean().optional(),
+  // Allow nulling out selector/keyword when switching watch modes
+  selector: z
+    .string()
+    .max(500)
+    .refine((val) => isValidCssSelector(val), 'Invalid CSS selector syntax')
+    .nullable()
+    .optional(),
+  keyword: z.string().max(200).nullable().optional(),
 });
 
 export type CreateMonitorInput = z.infer<typeof createMonitorSchema>;

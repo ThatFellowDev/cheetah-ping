@@ -43,7 +43,16 @@ export function MonitorList({ monitors }: { monitors: Monitor[] }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
+      <div className="space-y-3 sm:space-y-0 sm:flex sm:items-center sm:gap-4">
+        <div className="relative sm:hidden">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search monitors..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         <Tabs value={statusFilter} onValueChange={setStatusFilter}>
           <TabsList>
             <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
@@ -52,7 +61,7 @@ export function MonitorList({ monitors }: { monitors: Monitor[] }) {
             <TabsTrigger value="error">Error ({counts.error})</TabsTrigger>
           </TabsList>
         </Tabs>
-        <div className="relative flex-1 max-w-xs">
+        <div className="relative flex-1 max-w-xs hidden sm:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search monitors..."
