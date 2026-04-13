@@ -10,16 +10,3 @@ export function getStatusBadgeClass(status: string) {
       return 'bg-muted text-muted-foreground';
   }
 }
-
-export function getStatusDotClass(status: string) {
-  switch (status) {
-    case 'active':
-      return 'bg-emerald-500';
-    case 'paused':
-      return 'bg-amber-500';
-    case 'error':
-      return 'bg-red-500';
-    default:
-      return 'bg-muted-foreground';
-  }
-}

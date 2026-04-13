@@ -66,8 +66,3 @@ export function CookieBanner() {
     </div>
   );
 }
-
-/** Check if user consented to non-essential cookies/analytics */
-export function hasAnalyticsConsent(): boolean {
-  return getConsent() === 'accepted';
-}

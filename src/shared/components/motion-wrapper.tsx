@@ -35,42 +35,6 @@ export function ScrollReveal({
   );
 }
 
-interface FloatingOrbProps {
-  className?: string;
-  color?: string;
-  size?: string;
-  delay?: number;
-}
-
-export function FloatingOrb({
-  className = '',
-  color = 'oklch(0.78 0.16 75 / 25%)',
-  size = '400px',
-  delay = 0,
-}: FloatingOrbProps) {
-  return (
-    <motion.div
-      className={`absolute rounded-full pointer-events-none blur-3xl ${className}`}
-      style={{
-        background: `radial-gradient(circle, ${color}, transparent 70%)`,
-        width: size,
-        height: size,
-      }}
-      animate={{
-        y: [0, -20, 0],
-        scale: [1, 1.05, 1],
-        opacity: [0.4, 0.7, 0.4],
-      }}
-      transition={{
-        duration: 4,
-        delay,
-        repeat: Infinity,
-        ease: 'easeInOut',
-      }}
-    />
-  );
-}
-
 interface GlowButtonProps {
   children: React.ReactNode;
   className?: string;
