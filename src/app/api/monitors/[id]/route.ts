@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { eq, and } from 'drizzle-orm';
 import { db } from '@/shared/database/db';
-import { monitors, user } from '@/shared/database/schema';
+import { monitors, changeLog } from '@/shared/database/schema';
 import { auth } from '@/modules/auth/auth';
 import { updateMonitorSchema } from '@/modules/monitoring/lib/schemas';
 import { headers } from 'next/headers';
+import { deleteFromR2, r2KeyFromUrl } from '@/lib/r2';
 
 async function getAuthUser() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -85,7 +86,27 @@ export async function DELETE(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
+  // Collect all R2 screenshot URLs before deleting DB rows (cascade deletes change_log)
+  const changes = await db.query.changeLog.findMany({
+    where: eq(changeLog.monitorId, id),
+    columns: { beforeScreenshotUrl: true, afterScreenshotUrl: true },
+  });
+
+  const screenshotUrls = new Set<string>();
+  if (monitor.lastScreenshotUrl) screenshotUrls.add(monitor.lastScreenshotUrl);
+  for (const change of changes) {
+    if (change.beforeScreenshotUrl) screenshotUrls.add(change.beforeScreenshotUrl);
+    if (change.afterScreenshotUrl) screenshotUrls.add(change.afterScreenshotUrl);
+  }
+
+  // Delete the monitor (cascades to change_log rows)
   await db.delete(monitors).where(and(eq(monitors.id, id), eq(monitors.userId, authUser.id)));
+
+  // Clean up R2 objects in the background (best-effort, don't block the response)
+  for (const url of screenshotUrls) {
+    const key = r2KeyFromUrl(url);
+    if (key) deleteFromR2(key).catch(() => {});
+  }
 
   return NextResponse.json({ data: { success: true } });
 }
