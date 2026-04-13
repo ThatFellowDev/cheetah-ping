@@ -24,7 +24,18 @@ export default async function MarketingLayout({
             <span className="font-heading font-bold text-lg gradient-text">Cheetah Ping</span>
           </Link>
           <nav className="hidden md:flex items-center gap-1">
-            <Link href="/use-cases" className="text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">Use Cases</Link>
+            <div className="relative group">
+              <Link href="/use-cases" className="text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">
+                Use Cases
+              </Link>
+              <div className="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50">
+                <div className="w-48 rounded-lg bg-popover border border-white/10 shadow-xl p-1 text-sm">
+                  <Link href="/use-cases#personal" className="block px-3 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors">Personal</Link>
+                  <Link href="/use-cases#business" className="block px-3 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors">Business</Link>
+                  <Link href="/use-cases#industry" className="block px-3 py-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors">Industry</Link>
+                </div>
+              </div>
+            </div>
             <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">How It Works</a>
             <a href="#compare" className="text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">Compare</a>
             <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground hover:bg-white/5 px-3 py-1.5 rounded-lg transition-all">Pricing</a>

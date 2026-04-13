@@ -99,10 +99,10 @@ const marqueeItems = [
 
 const comparisonData = [
   { feature: 'AI-powered setup', cheetah: 'Included (auto-configures)', visualping: 'No', distill: 'No', cheetahWins: true },
-  { feature: 'AI change summaries', cheetah: 'Included free', visualping: 'Premium AI (extra cost)', distill: 'No', cheetahWins: true },
-  { feature: 'Check limits', cheetah: 'Unlimited', visualping: '150-50K/mo', distill: '1K-200K/mo', cheetahWins: true },
-  { feature: 'Starting price', cheetah: '$9/mo (10 monitors)', visualping: '$14/mo (10 pages)', distill: '$15/mo (50 monitors)', cheetahWins: true },
-  { feature: 'Slack + Discord', cheetah: 'All plans', visualping: 'Business ($140/mo)', distill: 'Paid plans', cheetahWins: true },
+  { feature: 'AI change summaries', cheetah: 'Included free', visualping: 'Premium AI (extra cost)', distill: 'Flexi plan ($80+/mo)', cheetahWins: true },
+  { feature: 'Check limits', cheetah: 'Unlimited', visualping: '1K-50K/mo', distill: '1K-200K/mo', cheetahWins: true },
+  { feature: 'Starting price', cheetah: '$9/mo (10 monitors)', visualping: '$10/mo (25 pages)', distill: '$15/mo (50 monitors)', cheetahWins: true },
+  { feature: 'Slack + Discord', cheetah: 'All plans', visualping: 'Business ($105+/mo)', distill: 'Starter+ ($15/mo)', cheetahWins: true },
   { feature: 'Setup time', cheetah: '~30 seconds (AI)', visualping: '2-5 minutes', distill: '3-5 minutes', cheetahWins: true },
   { feature: 'Pricing model', cheetah: 'Simple flat rate', visualping: 'Per-check billing', distill: 'Per-check billing', cheetahWins: true },
 ];

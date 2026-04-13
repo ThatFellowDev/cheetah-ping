@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { USE_CASES } from '@/shared/content/use-cases';
 import { ScrollReveal } from '@/shared/components/motion-wrapper';
 import { ParticleNetwork } from '@/shared/components/particle-network';
+import { LinkButton } from '@/shared/components/link-button';
 import { UseCaseIcon } from './[slug]/use-case-icon';
 
 export const metadata: Metadata = {
@@ -40,6 +41,15 @@ export default function UseCasesIndexPage() {
               If it has a URL, Cheetah Ping can watch it. See how people
               across industries use it to stay ahead.
             </p>
+            <div className="mt-8">
+              <LinkButton
+                href="/login"
+                size="lg"
+                className="bg-gradient-to-r from-amber-500 via-amber-400 to-orange-500 text-primary-foreground hover:shadow-[0_0_20px_oklch(0.78_0.16_75_/_30%)] transition-shadow border-0"
+              >
+                Get started free
+              </LinkButton>
+            </div>
           </ScrollReveal>
         </div>
       </section>
@@ -48,7 +58,7 @@ export default function UseCasesIndexPage() {
       {categories.map((cat) => {
         const items = USE_CASES.filter((uc) => uc.category === cat.key);
         return (
-          <section key={cat.key} className="py-16 border-t border-white/5">
+          <section key={cat.key} id={cat.key} className="py-16 border-t border-white/5 scroll-mt-16">
             <div className="mx-auto max-w-5xl px-4">
               <ScrollReveal>
                 <h2 className="font-heading text-2xl font-bold mb-2">

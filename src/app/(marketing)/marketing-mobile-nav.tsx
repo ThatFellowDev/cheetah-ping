@@ -9,15 +9,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
-
-const NAV_LINKS = [
-  { href: '/use-cases', label: 'Use Cases' },
-  { href: '#how-it-works', label: 'How It Works' },
-  { href: '#compare', label: 'Compare' },
-  { href: '#pricing', label: 'Pricing' },
-  { href: '#faq', label: 'FAQ' },
-];
 
 export function MarketingMobileNav({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   return (
@@ -31,20 +24,31 @@ export function MarketingMobileNav({ isLoggedIn = false }: { isLoggedIn?: boolea
         <span className="sr-only">Open menu</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" sideOffset={8} className="w-48">
-        {NAV_LINKS.map((link) => (
-          <DropdownMenuItem
-            key={link.href}
-            render={
-              link.href.startsWith('#') ? (
-                <a href={link.href} />
-              ) : (
-                <Link href={link.href} />
-              )
-            }
-          >
-            {link.label}
-          </DropdownMenuItem>
-        ))}
+        <DropdownMenuItem render={<Link href="/use-cases" />}>
+          Use Cases
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/use-cases#personal" />} className="pl-6 text-muted-foreground">
+          Personal
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/use-cases#business" />} className="pl-6 text-muted-foreground">
+          Business
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/use-cases#industry" />} className="pl-6 text-muted-foreground">
+          Industry
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem render={<a href="#how-it-works" />}>
+          How It Works
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<a href="#compare" />}>
+          Compare
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<a href="#pricing" />}>
+          Pricing
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<a href="#faq" />}>
+          FAQ
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         {isLoggedIn ? (
           <DropdownMenuItem render={<Link href="/dashboard" />}>
